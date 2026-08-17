@@ -1,0 +1,33 @@
+# lazygit config
+# setup.sh symlinks this to "$(lazygit --print-config-dir)/config.yml",
+# which is ~/Library/Application Support/lazygit on macOS and
+# ~/.config/lazygit on Linux (or wherever XDG_CONFIG_HOME points).
+
+gui:
+  showFileTree: true
+  mainPanelSplitMode: flexible
+  sidePanelWidth: 0.3333
+  # nerdFontsVersion: "3"   # uncomment if your terminal font is a Nerd Font
+
+git:
+  # Render diffs with delta, matching the pager in gitconfig.
+  # Note: as of lazygit 0.64 this key is `diffRenderers`; it was `pagers`
+  # before, and `paging.useConfig` no longer exists.
+  # --paging=never because lazygit does its own scrolling.
+  # --no-gitconfig ignores the [delta] section in gitconfig, whose
+  # side-by-side=true is too cramped for lazygit's main panel. That also drops
+  # line-numbers, so it's passed back explicitly. delta rejects
+  # --side-by-side=false, so opting out means ignoring gitconfig wholesale.
+  diffRenderers:
+    - name: delta
+      type: stdinFilter
+      command: delta --no-gitconfig --paging=never --line-numbers
+      colorArg: always
+
+  mainBranches:
+    - main
+    - master
+
+  # gitconfig sets pull.ff=only; keep lazygit from creating merge commits too.
+  merging:
+    manualCommit: false
