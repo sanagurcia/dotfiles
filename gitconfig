@@ -1,0 +1,30 @@
+[user]
+	email = sanagurcia@gmail.com
+	name = Santiago Agurcia
+
+[init]
+	defaultBranch = main
+
+[alias]
+	co = checkout
+	st = status
+	br = branch
+	cm = commit -m
+	amend = commit -a --amend --no-edit
+	undo = !git reset --hard && git clean -f -d
+	ignore = update-index --assume-unchanged
+
+[pull]
+	ff = only
+
+[core]
+    pager = delta
+    editor = emacs
+
+[interactive]
+    diffFilter = delta --color-only
+
+[delta]
+    navigate = true
+    side-by-side = true
+    line-numbers = true
