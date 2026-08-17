@@ -1,5 +1,5 @@
 [user]
-	email = sanagurcia@gmail.com
+	email = santiago@autarc.energy 
 	name = Santiago Agurcia
 
 [init]
@@ -18,13 +18,13 @@
 	ff = only
 
 [core]
-    pager = delta
-    editor = emacs
+	pager = delta
+	editor = emacs
 
 [interactive]
-    diffFilter = delta --color-only
+	diffFilter = delta --color-only
 
 [delta]
-    navigate = true
-    side-by-side = true
-    line-numbers = true
+	navigate = true
+	side-by-side = true
+	line-numbers = true
