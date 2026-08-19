@@ -9,7 +9,7 @@ committed here reaches the other side with one command.
 | Repo file              | Symlinked to              | What it configures                  |
 | ---------------------- | ------------------------- | ----------------------------------- |
 | `gitconfig`            | `~/.gitconfig`            | identity, aliases, delta as pager   |
-| `nanorc`               | `~/.nanorc`               | emacs-style word motions in nano    |
+| `nanorc`               | `~/.nanorc`               | less-style navigation in nano       |
 | `tmux.conf`            | `~/.tmux.conf`            | Ctrl+Space prefix                   |
 | `zshrc`                | `~/.zshrc.local`          | zsh overlay, where a `~/.zshrc` exists |
 | `claude/settings.json` | `~/.claude/settings.json` | Claude Code user settings           |
@@ -78,6 +78,8 @@ Note when extending `nanorc`: syntax-highlighting `include` paths differ between
 the two systems (`/opt/homebrew/share/nano` vs `/usr/share/nano`) and nanorc has
 no conditionals, so a hardcoded path errors on the other machine. Append such
 lines from `setup.sh` instead.
+
+Navigation bindings mimic `less`.
 
 ### bat
 

@@ -2,3 +2,11 @@ bind M-f nextword main
 bind M-b prevword main
 bind M-d chopwordright main
 
+# less-style navigation
+bind ^U pageup main
+bind ^D pagedown main
+bind ^G firstline main
+bind ^/ whereis main
+
+bind ^S savefile main
+bind ^V paste main     # ^U is now page up
