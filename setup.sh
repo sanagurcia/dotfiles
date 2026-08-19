@@ -5,12 +5,8 @@ DOTFILES="$HOME/dotfiles"
 
 ln -sf "$DOTFILES/gitconfig" "$HOME/.gitconfig"
 
-# lazygit's config dir is OS-dependent (~/Library/Application Support on macOS,
-# ~/.config on Linux), so ask lazygit instead of hardcoding a path.
-if command -v lazygit >/dev/null 2>&1; then
-	LAZYGIT_DIR="$(lazygit --print-config-dir)"
-	mkdir -p "$LAZYGIT_DIR"
-	ln -sf "$DOTFILES/lazygit-config.yml" "$LAZYGIT_DIR/config.yml"
-else
-	echo "setup.sh: lazygit not installed, skipping its config" >&2
-fi
+# Claude Code reads user-level memory and settings from ~/.claude. Symlink them
+# so this machine and the Coder workspace share one source of truth.
+mkdir -p "$HOME/.claude"
+ln -sf "$DOTFILES/claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
+ln -sf "$DOTFILES/claude/settings.json" "$HOME/.claude/settings.json"
