@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-DOTFILES="$HOME/dotfiles"
+# Resolve the repo from this script's own location: `coder dotfiles` clones
+# into the coder config dir, not ~/dotfiles.
+DOTFILES="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 ln -sf "$DOTFILES/gitconfig" "$HOME/.gitconfig"
 
