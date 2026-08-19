@@ -1,0 +1,4 @@
+bind M-f nextword main
+bind M-b prevword main
+bind M-d chopwordright main
+
