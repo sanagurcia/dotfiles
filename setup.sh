@@ -14,9 +14,7 @@ mkdir -p "$HOME/.claude"
 ln -sf "$DOTFILES/claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
 ln -sf "$DOTFILES/claude/settings.json" "$HOME/.claude/settings.json"
 
-# zsh lives in the Coder workspace only — the Mac runs bash and has no ~/.zshrc.
-# That file is image skel maintained with the image, so source an overlay from it
-# rather than symlinking over it.
+# Overlay an existing ~/.zshrc — skipped where there is none.
 if [ -f "$HOME/.zshrc" ]; then
 	ln -sf "$DOTFILES/zshrc" "$HOME/.zshrc.local"
 	if ! grep -q '\.zshrc\.local' "$HOME/.zshrc"; then

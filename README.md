@@ -97,3 +97,22 @@ On Debian the binary is installed as **`batcat`** — plain `bat` belongs to
 ```bash
 mkdir -p ~/.local/bin && ln -sf /usr/bin/batcat ~/.local/bin/bat
 ```
+
+### fzf
+
+Fuzzy finder.
+
+```bash
+brew install fzf        # macOS
+sudo apt install fzf    # Debian / Ubuntu
+```
+
+### fd
+
+Fast `find`. Debian ships it as `fdfind`, so bridge the name like bat.
+
+```bash
+brew install fd             # macOS
+sudo apt install fd-find    # Debian / Ubuntu
+ln -sf "$(command -v fdfind)" ~/.local/bin/fd
+```
