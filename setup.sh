@@ -7,6 +7,7 @@ DOTFILES="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 ln -sf "$DOTFILES/gitconfig" "$HOME/.gitconfig"
 ln -sf "$DOTFILES/nanorc" "$HOME/.nanorc"
+ln -sf "$DOTFILES/tmux.conf" "$HOME/.tmux.conf"
 
 # Claude Code reads user-level memory and settings from ~/.claude. Symlink them
 # so this machine and the Coder workspace share one source of truth.

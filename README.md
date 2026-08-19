@@ -10,6 +10,8 @@ committed here reaches the other side with one command.
 | ---------------------- | ------------------------- | ----------------------------------- |
 | `gitconfig`            | `~/.gitconfig`            | identity, aliases, delta as pager   |
 | `nanorc`               | `~/.nanorc`               | emacs-style word motions in nano    |
+| `tmux.conf`            | `~/.tmux.conf`            | Ctrl+Space prefix                   |
+| `zshrc`                | `~/.zshrc.local`          | zsh overlay, where a `~/.zshrc` exists |
 | `claude/settings.json` | `~/.claude/settings.json` | Claude Code user settings           |
 | `claude/CLAUDE.md`     | `~/.claude/CLAUDE.md`     | Claude Code user-level instructions |
 
