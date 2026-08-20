@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Pick an rg hit (file:line:...) from stdin, open it in bat.
-sel=$(fzf --ansi -d: --preview 'bat-at {1} {2}' --preview-window '+{2}/2') || exit 0
+# Pick a hit (file[:line:...]) from stdin, open it in bat.
+sel=$(fzf --ansi -d: --preview 'bat-at {1} {2}' --preview-window 'right,60%,border-left') || exit 0
 IFS=: read -r file line _ <<<"$sel"
 bat-at "$file" "$line"

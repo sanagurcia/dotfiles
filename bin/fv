@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Find a file by name, pick it, view it.
+fd -t f "$1" | pick

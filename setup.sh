@@ -12,7 +12,7 @@ ln -sf "$DOTFILES/ripgreprc" "$HOME/.ripgreprc"
 
 # rg helper scripts (~/.local/bin is on PATH).
 mkdir -p "$HOME/.local/bin"
-for f in refs spread defs _defs bat-at pick; do ln -sf "$DOTFILES/bin/$f" "$HOME/.local/bin/$f"; done
+for f in refs spread defs _defs fv bat-at pick; do ln -sf "$DOTFILES/bin/$f" "$HOME/.local/bin/$f"; done
 
 # Claude Code reads user-level memory and settings from ~/.claude. Symlink them
 # so this machine and the Coder workspace share one source of truth.
