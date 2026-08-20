@@ -38,11 +38,38 @@ Re-running the same command pulls the latest commit and re-links — that is als
 how you update a workspace after pushing here. It is not run automatically on
 workspace start; the symlinks simply persist on the home volume.
 
+## Workspace rebuilds
+
+The Coder workspace is a container. Only `/home/coder` is a persistent volume —
+`/usr` and `/usr/local` come from the image and reset every rebuild, so anything
+`apt install`ed by hand disappears while its config symlink survives and dangles.
+
+So `setup.sh` installs nano, bat and fd under `~/.local/opt` and links them into
+`~/.local/bin`, both on the persistent volume:
+
+- **nano** — unpacked from its `.deb`. Safe, because its only dependencies
+  (ncurses, libc) are in the image.
+- **bat** — static musl build from upstream. The Debian package links `libgit2`,
+  which the image lacks, so that dependency would vanish on rebuild and take bat
+  with it.
+- **fd** — static musl build. The image does ship fd, but a symlink into `/usr`
+  is only as durable as the image's package list, so this owns it outright.
+
+git-delta and fzf still come from the image.
+
+Tradeoff: these are pinned and updated by hand, not by `apt upgrade`. Bump
+`BAT_VERSION` or `FD_VERSION` in `setup.sh` and re-run — the version is part of
+the install path, so a bump reinstalls. For nano, delete `~/.local/opt/nano`
+first.
+
 ## Prerequisites
 
 `gitconfig` sets `core.pager = delta` and `core.editor = nano`, so install both
 before linking or git will fail to page and `git commit` will open the wrong
 editor.
+
+In a Coder workspace, `setup.sh` installs nano, bat and fd for you — see
+[Workspace rebuilds](#workspace-rebuilds). The rest are manual, on both systems.
 
 ### git-delta
 
@@ -58,14 +85,10 @@ sudo apt install git-delta
 
 ### nano
 
-Debian ships GNU nano already:
+On Debian, `setup.sh` handles it. Otherwise `sudo apt install nano`.
 
-```bash
-sudo apt install nano
-```
-
-macOS does **not**. Its `/usr/bin/nano` is UW PICO 5.09 wearing the name, and it
-ignores `~/.nanorc` bindings, so install the real thing:
+macOS has no real nano: its `/usr/bin/nano` is UW PICO 5.09 wearing the name,
+and it ignores `~/.nanorc` bindings, so install the genuine article:
 
 ```bash
 brew install nano
@@ -87,16 +110,12 @@ Navigation bindings mimic `less`.
 out to it, alongside `fd` and `fzf`.
 
 ```bash
-# macOS
-brew install bat
-
-# Debian / Ubuntu
-sudo apt install bat
+brew install bat        # macOS
 ```
 
-On Debian the binary is installed as **`batcat`** — plain `bat` belongs to
-`bacula-console-qt` — so bridge the name, with `~/.local/bin` ahead of
-`/usr/bin` on `PATH`:
+On Debian, `setup.sh` handles it. Installing via `apt` instead names the binary
+**`batcat`** — plain `bat` belongs to `bacula-console-qt` — so bridge the name,
+with `~/.local/bin` ahead of `/usr/bin` on `PATH`:
 
 ```bash
 mkdir -p ~/.local/bin && ln -sf /usr/bin/batcat ~/.local/bin/bat
@@ -113,10 +132,15 @@ sudo apt install fzf    # Debian / Ubuntu
 
 ### fd
 
-Fast `find`. Debian ships it as `fdfind`, so bridge the name like bat.
+Fast `find`.
 
 ```bash
-brew install fd             # macOS
-sudo apt install fd-find    # Debian / Ubuntu
+brew install fd        # macOS
+```
+
+On Debian, `setup.sh` handles it. Installing via `apt install fd-find` instead
+names the binary `fdfind`, so bridge the name like bat:
+
+```bash
 ln -sf "$(command -v fdfind)" ~/.local/bin/fd
 ```
