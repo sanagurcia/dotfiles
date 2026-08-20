@@ -14,6 +14,9 @@ committed here reaches the other side with one command.
 | `zshrc`                | `~/.zshrc.local`          | zsh overlay, where a `~/.zshrc` exists |
 | `claude/settings.json` | `~/.claude/settings.json` | Claude Code user settings           |
 | `claude/CLAUDE.md`     | `~/.claude/CLAUDE.md`     | Claude Code user-level instructions |
+| `ripgreprc`            | `~/.ripgreprc`            | rg defaults, `src`/`tst` file types  |
+| `batconfig`            | `~/.config/bat/config`    | bat follows the macOS light/dark setting |
+| `bin/`                 | `~/.local/bin/`           | search helpers (see below)          |
 
 Files are stored without the leading dot; `setup.sh` adds it when linking.
 
@@ -62,6 +65,23 @@ Tradeoff: these are pinned and updated by hand, not by `apt upgrade`. Bump
 the install path, so a bump reinstalls. For nano, delete `~/.local/opt/nano`
 first.
 
+## Search helpers
+
+`bin/` holds small scripts over `rg`, `fd`, `fzf` and `bat`, symlinked into
+`~/.local/bin`. Run `scripts` to list them with their descriptions.
+
+| Command | What it does                                                  |
+| ------- | ------------------------------------------------------------- |
+| `ff`    | find a file by name, pick it, view it                          |
+| `fs`    | find a symbol's usages, pick one, view it                      |
+| `defs`  | pick a declaration site interactively                          |
+| `refs`  | which apps/packages a symbol appears in, plus total files      |
+| `scripts` | list these commands                                          |
+
+Underscore-prefixed scripts (`_defs`, `_pick`, `_bat-at`) are internals the
+others build on, not meant to be called directly. Symbol searches lean on the
+`src` and `tst` types defined in `ripgreprc`, so they skip tests by default.
+
 ## Prerequisites
 
 `gitconfig` sets `core.pager = delta` and `core.editor = nano`, so install both
@@ -106,8 +126,8 @@ Navigation bindings mimic `less`.
 
 ### bat
 
-`cat` with syntax highlighting and paging. The `fv` function in `zshrc` shells
-out to it, alongside `fd` and `fzf`.
+`cat` with syntax highlighting and paging. The search helpers in `bin/` shell
+out to it, alongside `fd`, `rg` and `fzf`.
 
 ```bash
 brew install bat        # macOS
