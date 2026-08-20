@@ -12,7 +12,7 @@ check-ins: **do not** ask for approval between phases, **do not** report progres
 in prose, **do not** ask "want me to continue?". Work until the PR is open and the
 preview link resolves, then notify once.
 
-Argument: a ticket ID (`COR-4919`, `HEAT-1834`, `UK-568`), a ticket URL, or pasted
+Argument: a ticket ID (`SER-156`, `HEAT-1834`, `UK-568`), a ticket URL, or pasted
 ticket text.
 
 ## The only two reasons to interrupt
@@ -41,20 +41,34 @@ fix, review feedback you can handle, CI you can re-run.
 1. `TaskCreate` one task per phase below, then `TaskUpdate` exactly one to
    `in_progress` at a time. The task list is the progress report — do not also
    narrate phases in prose.
-2. `git status` first. If the tree is dirty, leave every pre-existing change
-   alone and note it in the PR body — this checkout routinely has large untracked
-   files at the root.
-3. Confirm you are not on `main`. If you are, `git fetch origin` and branch from
-   `origin/main`. Name the branch the way this repo does — `<author>/<ticket-slug>`,
-   e.g. `isak/cor-4919-short-slug`; `get_issue` returns Linear's canonical branch
-   name, so prefer that.
-4. If `.worktree/ports.env` is missing, run `pnpm energy setup` before anything
-   that touches the dev environment or the database.
+2. **Always work in a new git worktree — never in the checkout you were invoked
+   from.** Get the branch name first: `get_issue` returns Linear's canonical one,
+   otherwise `<author>/<ticket-slug>`, e.g. `santiago/ser-156-short-slug`. Then,
+   from the repo root:
+
+   ```bash
+   git fetch origin
+   git worktree add ../<ticket-slug> -b <branch> origin/main
+   ```
+
+   Everything from here runs in that directory — pass it as `cwd`, or `cd` into it
+   in every command, and confirm with `git rev-parse --show-toplevel` before editing
+   anything. Every later phase — checks, commits, the push, `gh pr create` — runs
+   there too; never drift back to the original checkout.
+3. **Do not provision the worktree up front.** A fresh worktree has no dev
+   environment, and it does not need one to read code, edit files, type-check, lint,
+   or run unit tests. Run `pnpm energy setup` only at the moment an action actually
+   requires a provisioned environment — `pnpm db:push`, `pnpm db:gen-types`, a dev
+   server, or an integration test that hits the database — and only if
+   `.worktree/ports.env` is still missing. Setup costs minutes; most tickets never
+   need it. Once provisioned, read this worktree's ports from `.worktree/ports.env`
+   (`WT_*_PORT`) — the defaults (5173/3000/8080/54322) belong to the main checkout.
+4. `git status`. A fresh worktree starts clean, so anything dirty is yours.
 
 ## Phase 1 — Understand
 
 1. Fetch the ticket with the Linear MCP: `mcp__claude_ai_Linear__get_issue`
-   (`id`, accepts `COR-4919`), then `mcp__claude_ai_Linear__list_comments`
+   (`id`, accepts `SER-156`), then `mcp__claude_ai_Linear__list_comments`
    (`issueId`) — the real requirement is often in a comment, not the description.
    The MCP prefix is per-machine; if that name is missing, find it with
    `ToolSearch("linear issue comments")`. If Linear is unreachable or no ID was
@@ -108,9 +122,10 @@ files. Units sharing a file are one unit.
   files listed above. Report what you changed; the orchestrator runs the checks
   and commits."
 - Those commands, and any shared-file edit, are yours to do sequentially in the
-  main thread — sub-agents share one working tree and one dev environment, and
-  concurrent runs corrupt each other. Do not use `isolation: "worktree"`: a fresh
-  worktree has no provisioned dev environment, so its checks cannot run.
+  main thread — sub-agents all share your Phase 0 worktree and its single dev
+  environment, and concurrent runs corrupt each other. Do not give a sub-agent
+  `isolation: "worktree"`: its edits would land in a different tree on a different
+  branch, and never reach your PR.
 - **After the fan-in, run `AGENTS.md`'s scoped checks yourself** — sub-agent claims
   are not evidence. Two things that section leaves implicit: `pnpm db:push` needs
   `pnpm db:start` first, and `pnpm db:gen-types` already rebuilds type-library, so
@@ -226,7 +241,7 @@ When the link resolves, send exactly one notification:
 ```
 PushNotification({
   status: "proactive",
-  message: "COR-4919 ready to test: https://pr-1234-autarc-pro-staging.autarc.workers.dev — PR #1234, CI green"
+  message: "SER-156 ready to test: https://pr-1234-autarc-pro-staging.autarc.workers.dev — PR #1234, CI green"
 })
 ```
 
