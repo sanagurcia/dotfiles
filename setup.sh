@@ -19,6 +19,7 @@ for f in refs spread defs _defs fv bat-at pick; do ln -sf "$DOTFILES/bin/$f" "$H
 mkdir -p "$HOME/.claude"
 ln -sf "$DOTFILES/claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
 ln -sf "$DOTFILES/claude/settings.json" "$HOME/.claude/settings.json"
+ln -sfn "$DOTFILES/claude/skills" "$HOME/.claude/skills"
 
 # Overlay an existing ~/.zshrc — skipped where there is none.
 if [ -f "$HOME/.zshrc" ]; then
