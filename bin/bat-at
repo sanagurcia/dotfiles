@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Show FILE, highlighting LINE if given.
+if [ -n "$2" ]; then bat --color=always -H "$2" "$1"; else bat --color=always "$1"; fi

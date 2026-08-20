@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Declaration sites. Optional group is the Go method receiver.
+rg -t src -T tst "\b(function|const|class|type|interface|enum)\s+$1\b|\bfunc\s+(\([^)]*\)\s+)?$1\b" .

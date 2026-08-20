@@ -14,3 +14,6 @@ dots() {
   }
   print -P "%F{green}✓ Dotfiles updated%f"
 }
+
+# ripgrep reads flags only from this env var (no default path).
+export RIPGREP_CONFIG_PATH="$HOME/.ripgreprc"

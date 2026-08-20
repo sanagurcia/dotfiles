@@ -1,0 +1,16 @@
+# Case-insensitive unless the pattern contains a capital.
+--smart-case
+
+# Don't dump minified files / lockfiles into the terminal.
+--max-columns=200
+--max-columns-preview
+
+# Source languages, composable via include:
+--type-add=src:include:ts,go
+
+# Test files (repeated --type-add accumulates into one type)
+--type-add=tst:*.{test,spec}.{ts,tsx}
+--type-add=tst:*_test.go
+
+# Always emit line numbers, so piped output stays composable.
+--line-number
