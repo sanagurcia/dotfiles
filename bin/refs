@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
-# Per-file match counts for a symbol, hottest first.
-rg -t src -T tst -cw "$1" . | sort -t: -k2 -rn
-printf '\n%s files\n' "$(rg -t src -T tst -lw "$1" . | wc -l | tr -d ' ')"
+# Which apps/packages a symbol appears in (top 10), plus total files.
+rg -t src -T tst -lw "$1" . | cut -d/ -f2-4 | sort | uniq -c | sort -rn | head -10
+printf '\n%4s files\n' "$(rg -t src -T tst -lw "$1" . | wc -l | tr -d ' ')"

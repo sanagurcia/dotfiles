@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-# Show FILE. With LINE, highlight it and show surrounding context.
-f=$1 l=$2
-if [ -n "$l" ]; then
-  bat --color=always -H "$l" -r "$(( l > 15 ? l - 15 : 1 )):$(( l + 45 ))" "$f"
-else
-  bat --color=always "$f"
-fi

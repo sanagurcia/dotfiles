@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Pick a hit (file[:line:...]) from stdin, open it in bat.
+sel=$(fzf --ansi -d: --preview '_bat-at {1} {2}' --preview-window 'up,70%,border-bottom') || exit 0
+IFS=: read -r file line _ <<<"$sel"
+_bat-at "$file" "$line"

@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# List the public scripts with their header comments.
+for f in "$(dirname "$(readlink -f "$0")")"/[!_]*; do
+  printf '\033[1m%s\033[0m\n' "$(basename "$f")"
+  awk 'NR>1 && NR<12 { if (!/^#/) exit; sub(/^# ?/, ""); print "  " $0 }' "$f"
+  echo
+done

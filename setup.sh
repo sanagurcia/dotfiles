@@ -10,9 +10,12 @@ ln -sf "$DOTFILES/nanorc" "$HOME/.nanorc"
 ln -sf "$DOTFILES/tmux.conf" "$HOME/.tmux.conf"
 ln -sf "$DOTFILES/ripgreprc" "$HOME/.ripgreprc"
 
+mkdir -p "$HOME/.config/bat"
+ln -sf "$DOTFILES/batconfig" "$HOME/.config/bat/config"
+
 # rg helper scripts (~/.local/bin is on PATH).
 mkdir -p "$HOME/.local/bin"
-for f in refs spread defs _defs fv bat-at pick; do ln -sf "$DOTFILES/bin/$f" "$HOME/.local/bin/$f"; done
+for f in refs defs fv fs scripts _defs _bat-at _pick; do ln -sf "$DOTFILES/bin/$f" "$HOME/.local/bin/$f"; done
 
 # nano and bat are missing from the Coder image, and /usr is wiped on rebuild.
 # Install them under ~/.local instead, which lives on the home volume.

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Show FILE. With LINE, highlight it and show context sized to the fzf preview pane.
+f=$1 l=$2
+if [ -n "$l" ]; then
+  h=${FZF_PREVIEW_LINES:-60}
+  before=$(( h / 3 )) after=$(( h - h / 3 - 1 ))
+  bat --color=always -H "$l" -r "$(( l > before ? l - before : 1 )):$(( l + after ))" "$f"
+else
+  bat --color=always "$f"
+fi

@@ -1,0 +1,2 @@
+# Follow the macOS light/dark setting, even when piped (e.g. the fzf preview).
+--theme=auto:system

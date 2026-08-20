@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-# Which apps/packages a symbol appears in.
-rg -t src -T tst -lw "$1" . | cut -d/ -f2-4 | sort | uniq -c | sort -rn
