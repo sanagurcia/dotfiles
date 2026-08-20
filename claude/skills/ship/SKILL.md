@@ -42,9 +42,11 @@ fix, review feedback you can handle, CI you can re-run.
    `in_progress` at a time. The task list is the progress report — do not also
    narrate phases in prose.
 2. **Always work in a new git worktree — never in the checkout you were invoked
-   from.** Get the branch name first: `get_issue` returns Linear's canonical one,
-   otherwise `<author>/<ticket-slug>`, e.g. `santiago/ser-156-short-slug`. Then,
-   from the repo root:
+   from, and never via worktrunk (`wt switch --create`), which provisions the
+   full environment (services + tailnet) you do not need.** Get the branch name
+   first: `get_issue` returns Linear's canonical one, otherwise
+   `<author>/<ticket-slug>`, e.g. `santiago/ser-156-short-slug`. Then, from the
+   repo root:
 
    ```bash
    git fetch origin
@@ -55,14 +57,31 @@ fix, review feedback you can handle, CI you can re-run.
    in every command, and confirm with `git rev-parse --show-toplevel` before editing
    anything. Every later phase — checks, commits, the push, `gh pr create` — runs
    there too; never drift back to the original checkout.
-3. **Do not provision the worktree up front.** A fresh worktree has no dev
-   environment, and it does not need one to read code, edit files, type-check, lint,
-   or run unit tests. Run `pnpm energy setup` only at the moment an action actually
-   requires a provisioned environment — `pnpm db:push`, `pnpm db:gen-types`, a dev
-   server, or an integration test that hits the database — and only if
-   `.worktree/ports.env` is still missing. Setup costs minutes; most tickets never
-   need it. Once provisioned, read this worktree's ports from `.worktree/ports.env`
-   (`WT_*_PORT`) — the defaults (5173/3000/8080/54322) belong to the main checkout.
+3. **Provision the worktree minimally, right after creating it:**
+
+   ```bash
+   pnpm energy setup --no-services --no-tailscale
+   ```
+
+   A fresh worktree has no `node_modules` and no built shared packages, so
+   type-checking, linting and unit tests cannot run without a setup pass. This
+   one skips what checks never touch: `--no-services` skips the docker stack
+   (Supabase, Electric, NATS, Hydra, Temporal) and `--no-tailscale` keeps the
+   generated URLs on localhost — which is also what in-workspace browsers
+   (Playwright, chrome-devtools MCP) need. It still runs `pnpm install`, renders
+   the env files, claims a port slot, and runs `pnpm lib:build` plus the api-v2
+   embed/TLS targets — everything the checks depend on.
+
+   Setup renders env files from 1Password and will stall on an interactive
+   signin if there is no session. Check `op whoami` first; if it fails, that is a
+   blocking question (`op signin --account autarc`).
+
+   Only escalate to a full `pnpm energy setup` (or `pnpm services up` on top of
+   this one) when an action actually needs running services — `pnpm db:push`,
+   `pnpm db:gen-types`, a dev server, or an integration test that hits the
+   database. Most tickets never need it. Read this worktree's ports from
+   `.worktree/ports.env` (`WT_*_PORT`) — the defaults (5173/3000/8080/54322)
+   belong to the main checkout.
 4. `git status`. A fresh worktree starts clean, so anything dirty is yours.
 
 ## Phase 1 — Understand
