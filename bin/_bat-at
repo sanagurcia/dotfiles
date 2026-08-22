@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Show FILE. With LINE, highlight it and show context sized to the fzf preview pane.
+# Show FILE, whole. With LINE, highlight it and open the pager a third of a screen
+# above it. In an fzf preview bat writes to a pipe, so the pager spec is inert and
+# _pick's +{2}-/3 does the same positioning.
 f=$1 l=$2
 if [ -n "$l" ]; then
-  h=${FZF_PREVIEW_LINES:-60}
-  before=$(( h / 3 )) after=$(( h - h / 3 - 1 ))
-  bat --color=always -H "$l" -r "$(( l > before ? l - before : 1 )):$(( l + after ))" "$f"
+  bat --color=always -H "$l" --pager "less -R -F -X -j.33 +$l" "$f"
 else
   bat --color=always "$f"
 fi
