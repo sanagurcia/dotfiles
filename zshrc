@@ -6,6 +6,13 @@ path=(/opt/homebrew/bin $HOME/.local/bin /opt/homebrew/opt/libpq/bin $path $HOME
 fpath=(/opt/homebrew/share/zsh/site-functions $fpath)
 autoload -Uz compinit && compinit
 
+# History is how I get long commands back (Ctrl-R, !!, !$), so keep plenty of it
+# and write it as I go — detached tmux sessions get killed and never exit cleanly.
+HISTFILE=$HOME/.zsh_history
+HISTSIZE=50000
+SAVEHIST=50000
+setopt hist_ignore_all_dups hist_reduce_blanks hist_verify inc_append_history
+
 # Prompt: host:cwd:branch / ❯
 autoload -Uz vcs_info
 zstyle ':vcs_info:git:*' formats '%b'
@@ -26,5 +33,9 @@ nvm() { unfunction nvm; . /opt/homebrew/opt/nvm/nvm.sh; nvm "$@"; }
 
 alias ll='ls -l' la='ls -a'
 alias ssh-coder='ssh main.heiliger-space.santiago.coder'
+
+# Ctrl-R fuzzy-searches the whole history, Ctrl-T drops a file path into the
+# line I am typing, Alt-C cds into a directory I pick.
+eval "$(fzf --zsh)"
 
 command -v wt >/dev/null && eval "$(wt config shell init zsh)"   # after compinit
