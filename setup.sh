@@ -17,6 +17,11 @@ ln -sf "$DOTFILES/batconfig" "$HOME/.config/bat/config"
 mkdir -p "$HOME/.local/bin"
 for f in "$DOTFILES"/bin/*; do ln -sf "$f" "$HOME/.local/bin/$(basename "$f")"; done
 
+# Prune links left behind by renames in bin/.
+for f in "$HOME/.local/bin"/*; do
+	if [ -L "$f" ] && [ ! -e "$f" ]; then rm -f "$f"; fi
+done
+
 # nano and bat are missing from the Coder image, and /usr is wiped on rebuild.
 # Install them under ~/.local instead, which lives on the home volume.
 if command -v apt-get >/dev/null; then
