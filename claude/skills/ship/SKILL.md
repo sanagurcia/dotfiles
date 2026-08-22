@@ -17,9 +17,16 @@ ticket text.
 
 ## The only two reasons to interrupt
 
-1. **Blocking question** — proceeding under any assumption would produce work that
-   is unsafe or useless if the assumption is wrong. Send `PushNotification`, then
-   `AskUserQuestion` with concrete options and a recommendation first.
+1. **Blocking question** — proceeding would be unsafe, destructive, or would
+   produce work that is useless if the assumption is wrong. Send
+   `PushNotification`, then `AskUserQuestion` with concrete options and a
+   recommendation first.
+
+   The bar is high on purpose: this runs in a detached tmux session, so a
+   blocked run stalls until the user reattaches — possibly hours. A PR built on
+   a documented assumption is reviewable in their GitHub pass and cheap to
+   redirect; a stalled run costs them the morning. When in doubt, pick, write it
+   under **Assumptions** in the PR body, and keep going.
 2. **Preview link ready** — one `PushNotification` carrying the preview URL.
 
 `PushNotification` takes `{status: "proactive", message: "<200 chars"}`. It is
@@ -117,9 +124,11 @@ fix, review feedback you can handle, CI you can re-run.
    improvising (`table-creator`, `electric-migrator`, `icon-creator`,
    `schema-mapper`, `pdf-markup`, `stripe`, `room-scan`, …).
 
-**Scope check.** If the ticket needs a schema migration plus cross-app changes, or
-the acceptance criteria are genuinely undefined, or it requires a product
-decision, that is a blocking question. Notify once with what you found, and stop.
+**Scope check.** Block only for a genuine product decision, or a ticket far
+larger than it looked (a schema migration *plus* cross-app changes). Undefined
+acceptance criteria are not automatically blocking: if a careful colleague would
+pick a reading, pick it, record it under **Assumptions** in the PR body, and
+continue. When you do block, notify once with what you found, and stop.
 
 ## Phase 2 — Plan
 
@@ -167,6 +176,15 @@ files. Units sharing a file are one unit.
   pseudo-language (`crwdns…` markers), not a real locale — never hand-write keys
   into it, in `apps/web/src/locales/` or the ui-library's shared locales.
 - Fix failures yourself. A red test is not a blocking question.
+- **Run targeted tests, never the full suite** — `go test ./internal/<pkg>/...`
+  or `-run <TestName>`, `pnpm turbo test -F <package>`. The Go suite is 767 test
+  files and most of it has nothing to do with your ticket.
+- **A failure you did not cause is out of scope.** `autarc-db` makes 78
+  `*_integration_test.go` files runnable that skip without a database and never
+  run in CI (`check-go.yml` sets no `SUPABASE_CONNECTION_STRING`), so some are
+  stale. Baseline any suspicious failure against `origin/main`; if it predates
+  your change, note it in the PR body and move on. Repairing the codebase is not
+  this skill's job, and a stale assertion is not yours to "fix".
 - Commit in logical chunks with Conventional Commit subjects. **Stage by explicit
   path — never `git add -A` or `git add .`.** Unrelated untracked files at the
   repo root would otherwise land in the PR and blow `PR Size Check`.
@@ -211,8 +229,45 @@ a blocking question.
 1. `git push -u origin <branch>` **first**. `gh pr create` on a branch with no
    upstream prompts or fails, and a prompt stalls the whole autonomous run.
 2. Follow `AGENTS.md`'s PR standards: whole template from disk verbatim,
-   Conventional Commits title, exactly one core preview label. Add
-   `Resolves <TICKET-ID>` and your Phase 2 assumptions to the body.
+   Conventional Commits title, exactly one core preview label.
+
+   **The label is not a guess.** `preview:web` deploys the frontend against the
+   *shared staging backends*, so a schema or API change previewed under it is
+   tested against a backend that does not have it. If you ran `autarc-db`, or
+   the diff touches `apps/api/**`, `apps/supabase/**` or the Ory/Hydra config,
+   the label is `preview:staging-full`.
+
+   **The PR body is the handoff.** The user reviews in the GitHub UI: they read
+   the description, check CI, then click the preview and test by hand. The
+   template has no "how to test" section and you cannot record a screencast, so
+   the free-form fields have to carry it. Keep the template's own sections
+   verbatim and fill them like this:
+
+   ```markdown
+   ## Description
+
+   <2-4 lines: what changed and why, against the ticket's acceptance criteria>
+
+   ### How to test in the preview
+
+   1. <navigate to X>
+   2. <do Y>
+   3. <expect Z>
+
+   ### Assumptions — need your review
+
+   - <assumption>: chose <reading> because <reason>. Wrong if <condition>.
+   - <none, if you made none — say so explicitly>
+
+   ## Release notes summary
+
+   <one non-technical line, or omit the section entirely>
+
+   Resolves SER-156
+   ```
+
+   Drop the `Screencast/Screenshots` section rather than leaving its empty
+   comment behind. Tick only the checklist items that actually apply.
 3. Open the PR ready for review, not as a draft — `check-pr.yml` skips drafts, so
    a draft PR produces no CI to watch.
 4. Watch CI in the background — `--watch` blocks longer than a foreground `Bash`
@@ -263,6 +318,34 @@ echo "preview NOT ready after 30m"`,
 
 If it times out, notify with the PR URL and the failing preview job instead of a
 link — never report a link you did not see resolve.
+
+### Clean up before notifying
+
+The PR is pushed, so the worktree is disposable. Tear it down *before* the
+notification — on both paths, whether the preview link resolved or the wait
+timed out — so the report is the last thing that happens.
+
+1. **Only if you ran `autarc-db`**, drop that slot's containers and data — from
+   inside the worktree, so it targets this slot's project (`autarc-supabase-s<N>`)
+   and not the main checkout:
+
+   ```bash
+   pnpm services down --volumes
+   ```
+
+   `--volumes` belongs here and nowhere else: the slot is disposable, and
+   without it the volumes outlive the worktree. **Never run it in the main
+   checkout** — there it deletes the real local database.
+
+2. **Always** remove the worktree, database or not. Run this from the main
+   checkout: git refuses to remove the worktree you are standing in.
+
+   ```bash
+   cd <main-checkout> && git worktree remove <worktree-path> --force
+   git worktree prune
+   ```
+
+   Leave the branch alone — it is pushed, and the PR points at it.
 
 When the link resolves, send exactly one notification:
 
