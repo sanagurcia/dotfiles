@@ -70,37 +70,32 @@ fix, review feedback you can handle, CI you can re-run.
    integration tests skip themselves without a database, so `make test` stays
    green here.
 
-   Escalate only when the ticket actually needs more:
+   **One** escalation exists, for a migration or an integration test that hits
+   the database:
 
-   - **Env files, a port slot, or a browser** (Playwright, chrome-devtools MCP,
-     a dev server):
+   ```bash
+   autarc-db       # setup pass + slim supabase start + pnpm db:push
+   ```
 
-     ```bash
-     pnpm energy setup --no-services --no-tailscale
-     ```
+   It runs the provisioning pass itself (`pnpm energy setup --no-services
+   --no-tailscale`), so it replaces `autarc-prep` rather than stacking on it:
+   port slot claimed, env files rendered, URLs on localhost. Unattended in
+   Coder, where `OP_SERVICE_ACCOUNT_TOKEN` renders the env files with no
+   prompt; anywhere else check `op whoami` first and treat a failure as a
+   blocking question (`op signin --account autarc`). It prints the
+   `SUPABASE_CONNECTION_STRING` to export for the Go tests, and its
+   `pnpm db:push` is itself the check that the migration applies.
 
-     `--no-services` skips the docker stack, `--no-tailscale` keeps the
-     generated URLs on localhost — which is what in-workspace browsers need.
-     This renders env files from 1Password. In Coder that is unattended
-     (`OP_SERVICE_ACCOUNT_TOKEN` is set); anywhere else check `op whoami`
-     first, and if it fails that is a blocking question
-     (`op signin --account autarc`).
+   **Those two scripts are the whole ladder — stop there.** Never run
+   `autarc-up`, `autarc-dev`, `autarc-stop`, a bare `pnpm energy setup`, or
+   `pnpm services up`. They bring up the service stack (Electric, NATS, Hydra,
+   Temporal), re-seed Hydra, import a 30k-row product catalog and claim the
+   tailnet — none of which any check touches. `autarc-dev` and `autarc-stop`
+   additionally assume the main checkout and would sweep its ports, killing
+   servers outside this worktree.
 
-   - **A migration, or an integration test that hits the database:**
-
-     ```bash
-     autarc-db       # setup pass + slim supabase start + pnpm db:push
-     ```
-
-     It does the provisioning pass itself, so it replaces `autarc-prep` rather
-     than stacking on it. It prints the `SUPABASE_CONNECTION_STRING` to export
-     for the Go tests, and its `pnpm db:push` is itself the check that the
-     migration applies. No service stack, no tailnet — that is `autarc-up`,
-     which no ticket needs.
-
-   Most tickets never leave the first line. Read this worktree's ports from
-   `.worktree/ports.env` (`WT_*_PORT`) — the defaults (5173/3000/8080/54322)
-   belong to the main checkout.
+   Read this worktree's ports from `.worktree/ports.env` (`WT_*_PORT`) — the
+   defaults (5173/3000/8080/54322) belong to the main checkout.
 4. `git status`. A fresh worktree starts clean, so anything dirty is yours.
 
 ## Phase 1 — Understand
@@ -201,11 +196,6 @@ Sub-agents see a smaller tool surface than you do — a reviewer reporting that 
 tool "does not exist" is describing its own sandbox, not the repo. Verify that
 claim yourself before acting on it.
 
-In parallel, run the `code-review` skill if it is available in this session, and
-`security-review` when the diff touches auth, payments, or data access. Both are
-machine-level, not checked into this repo — if a `Skill` call for them fails, note
-it and continue rather than stalling.
-
 ## Phase 5 — Handle feedback
 
 For each finding: fix it, or write one line saying why it does not apply. Never
@@ -293,6 +283,8 @@ Then, in the final message, in this order:
 ## Guardrails
 
 - Never merge. "Merge-ready" means open, green, reviewed, labelled.
+- Provisioning stops at `autarc-db`. Never run `autarc-up`, `autarc-dev`,
+  `autarc-stop`, `pnpm services up`, or a bare `pnpm energy setup`.
 - Never force-push a shared branch. Never commit to `main`.
 - Never `git add -A`/`git add .`, and never stage a file you did not change.
 - Never `git add` the plan file or anything else from the scratchpad.
