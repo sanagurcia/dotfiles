@@ -4,5 +4,5 @@
     "gopls-lsp@claude-plugins-official": true
   },
   "effortLevel": "medium",
-  "theme": "dark"
+  "theme": "auto"
 }
