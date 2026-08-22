@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Tier 5, main checkout: stop the dev servers autarc-dev started.
+# Containers are left running — `pnpm services down` for those.
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+
+# Same session name energy launch derives: the branch, sanitized.
+session=$(git rev-parse --abbrev-ref HEAD | sed 's/[^A-Za-z0-9_-]/-/g')
+if tmux kill-session -t "$session" 2>/dev/null; then
+  echo "killed tmux session $session"
+else
+  echo "no tmux session $session"
+fi
+
+_free-ports 5173 3000 8080   # web, api, api-v2; the worker has no port
+echo "✓ dev servers stopped (containers left up)"

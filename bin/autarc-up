@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Tier 3, main checkout: env files + every container the dev servers need.
+# Wraps `energy setup`, which renders the 1Password-backed env files and starts
+# supabase, electric, nats, hydra and temporal, seeds Hydra (in-memory, so it
+# needs re-seeding every start) and imports the product catalog. Idempotent;
+# expect an interactive 1Password sign-in. Extra args pass through.
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+pnpm energy setup --no-tailscale "$@"

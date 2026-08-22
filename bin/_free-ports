@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Free the given TCP ports: SIGTERM what listens, SIGKILL what survives.
+# Needed because tmux kill-session only signals each pane's foreground process —
+# air's compiled binary and node's children outlive it, still holding the port.
+for port in "$@"; do
+  pids=$(lsof -ti "tcp:$port" 2>/dev/null || true)
+  [ -n "$pids" ] || continue
+  echo "freeing :$port ($(echo $pids | tr '\n' ' '))"
+  kill $pids 2>/dev/null || true
+  sleep 1
+  pids=$(lsof -ti "tcp:$port" 2>/dev/null || true)
+  [ -n "$pids" ] && kill -9 $pids 2>/dev/null || true
+done

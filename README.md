@@ -11,12 +11,12 @@ committed here reaches the other side with one command.
 | `gitconfig`            | `~/.gitconfig`            | identity, aliases, delta as pager   |
 | `nanorc`               | `~/.nanorc`               | less-style navigation in nano       |
 | `tmux.conf`            | `~/.tmux.conf`            | Ctrl+Space prefix                   |
-| `zshrc`                | `~/.zshrc.local`          | zsh overlay, where a `~/.zshrc` exists |
+| `zshrc`                | `~/.zshrc`                | zsh config (overlaid as `~/.zshrc.local` on Coder) |
 | `claude/settings.json` | `~/.claude/settings.json` | Claude Code user settings           |
 | `claude/CLAUDE.md`     | `~/.claude/CLAUDE.md`     | Claude Code user-level instructions |
 | `ripgreprc`            | `~/.ripgreprc`            | rg defaults, `src`/`tst` file types  |
 | `batconfig`            | `~/.config/bat/config`    | bat follows the macOS light/dark setting |
-| `bin/`                 | `~/.local/bin/`           | search helpers (see below)          |
+| `bin/`                 | `~/.local/bin/`           | helper scripts (see below)           |
 
 Files are stored without the leading dot; `setup.sh` adds it when linking.
 
@@ -81,6 +81,33 @@ first.
 Underscore-prefixed scripts (`_defs`, `_pick`, `_bat-at`) are internals the
 others build on, not meant to be called directly. Symbol searches lean on the
 `src` and `tst` types defined in `ripgreprc`, so they skip tests by default.
+
+## Repo helpers
+
+| Command | What it does                      |
+| ------- | --------------------------------- |
+| `gl`    | git log since diverging from main |
+| `dots`  | pull this repo and re-link        |
+
+## Autarc dev stack
+
+Five tiers over the monorepo's `pnpm energy` CLI, in escalating order.
+`autarc-prep` and `autarc-db` are worktree-aware and need no secrets, so an
+agent can run them; the rest assume the main checkout and are for local
+testing.
+
+| Command       | What it does                                                    |
+| ------------- | --------------------------------------------------------------- |
+| `autarc-prep` | deps + shared packages: enough to type-check, lint, unit-test    |
+| `autarc-db`   | Postgres + migrations: enough for integration tests              |
+| `autarc-up`   | env files + the containers dev needs (1Password sign-in)         |
+| `autarc-dev`  | the dev servers as tmux panes, no agent pane                     |
+| `autarc-stop` | kill the tmux session, free the dev ports                        |
+
+`_free-ports` is an internal. `tmux kill-session` only signals each pane's
+foreground process, so air's compiled binary and node's children survive
+holding their ports — `autarc-dev` sweeps them before starting and
+`autarc-stop` after.
 
 ## Prerequisites
 

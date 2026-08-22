@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Tier 4, main checkout: the dev servers as tmux panes, no agent pane.
+# Defaults to web + api + api-v2 + worker; any args replace that set
+# (`pnpm energy launch --help` lists the app keys).
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+
+# Orphans from a previous run keep holding these, so never inherit them.
+_free-ports 5173 3000 8080
+
+if [ $# -gt 0 ]; then
+  pnpm energy launch --no-agent "$@"
+else
+  pnpm energy launch --no-agent web api api-v2 worker
+fi

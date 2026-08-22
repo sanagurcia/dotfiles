@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Tier 2, after autarc-prep: Postgres + migrations, nothing else. Enough to run
+# api-v2 integration tests and to check migrations apply. Worktree-aware.
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+
+# A provisioned worktree pins its own ports; the main checkout uses the base.
+port=54322
+if [ -f .worktree/ports.env ]; then
+  port=$(sed -n 's/^WT_SB_DB_PORT=//p' .worktree/ports.env)
+  [ -n "$port" ] || { echo "no WT_SB_DB_PORT in ports.env — run 'pnpm energy setup'" >&2; exit 1; }
+fi
+
+echo "==> supabase start (db only)"
+pnpm supabase --workdir apps start -x gotrue,kong   # devenv.SupabaseExcludes
+echo "==> pnpm db:push"
+pnpm db:push
+echo "✓ db up on :$port"
+echo "  integration tests: SUPABASE_CONNECTION_STRING=postgres://postgres:postgres@localhost:$port/postgres make test"

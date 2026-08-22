@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Tier 1 (prep < provision < dev): make a fresh worktree buildable.
+# Tier 1 (autarc-prep < autarc-up < autarc-dev): make a fresh worktree buildable.
 # Enough to type-check, lint and run unit tests, full-stack. No env, no
 # containers — api-v2 integration tests self-skip without a DB connection.
 set -euo pipefail
