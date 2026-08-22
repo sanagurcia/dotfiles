@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Pull this repo and re-link; `exec zsh` to reload the shell config.
+if [ -d "$HOME/dotfiles" ]; then
+  git -C "$HOME/dotfiles" pull -q && "$HOME/dotfiles/setup.sh" &&
+    printf '\033[32m✓ dotfiles\033[0m\n'
+else
+  coder dotfiles -y git@github.com:sanagurcia/dotfiles.git
+fi

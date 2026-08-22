@@ -24,23 +24,4 @@ export NVM_DIR="$HOME/.nvm"
 alias ll='ls -l' la='ls -a'
 alias ssh-coder='ssh main.heiliger-space.santiago.coder'
 
-gl() {
-  git log --oneline --date=short --max-count="${1:-5}" \
-    --format=format:"%Cgreen%ad %Cblue%an %C(yellow)%h %Creset%s"
-}
-
-glm() {
-  git log --oneline --date=short \
-    --format=format:"%Cgreen%ad %Cblue%an %C(yellow)%h %Creset%s" main..HEAD
-}
-
-# Pull this repo and re-link; on Coder the clone lives in the coder config dir.
-dots() {
-  if [[ -d ~/dotfiles ]]; then
-    git -C ~/dotfiles pull -q && ~/dotfiles/setup.sh && print -P "%F{green}✓ dotfiles%f"
-  else
-    coder dotfiles -y git@github.com:sanagurcia/dotfiles.git
-  fi
-}
-
 command -v wt >/dev/null && eval "$(wt config shell init zsh)"   # after compinit

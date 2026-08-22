@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# git log since diverging from main.
+git log --oneline --date=short \
+  --format=format:"%Cgreen%ad %Cblue%an %C(yellow)%h %Creset%s" main..HEAD
