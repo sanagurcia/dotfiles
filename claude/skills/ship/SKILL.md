@@ -57,29 +57,48 @@ fix, review feedback you can handle, CI you can re-run.
    in every command, and confirm with `git rev-parse --show-toplevel` before editing
    anything. Every later phase — checks, commits, the push, `gh pr create` — runs
    there too; never drift back to the original checkout.
-3. **Provision the worktree minimally, right after creating it:**
+3. **Provision the worktree, least-first.** A fresh worktree has no
+   `node_modules` and no built shared packages, so nothing can run until:
 
    ```bash
-   pnpm energy setup --no-services --no-tailscale
+   autarc-prep     # pnpm install + pnpm lib:build
    ```
 
-   A fresh worktree has no `node_modules` and no built shared packages, so
-   type-checking, linting and unit tests cannot run without a setup pass. This
-   one skips what checks never touch: `--no-services` skips the docker stack
-   (Supabase, Electric, NATS, Hydra, Temporal) and `--no-tailscale` keeps the
-   generated URLs on localhost — which is also what in-workspace browsers
-   (Playwright, chrome-devtools MCP) need. It still runs `pnpm install`, renders
-   the env files, claims a port slot, and runs `pnpm lib:build` plus the api-v2
-   embed/TLS targets — everything the checks depend on.
+   That is everything type-checking, linting and unit tests need — the rest of a
+   setup pass is about *running* the stack, which the checks never touch. It
+   needs no secrets, so it cannot stall on a 1Password session. api-v2's
+   integration tests skip themselves without a database, so `make test` stays
+   green here.
 
-   Setup renders env files from 1Password and will stall on an interactive
-   signin if there is no session. Check `op whoami` first; if it fails, that is a
-   blocking question (`op signin --account autarc`).
+   Escalate only when the ticket actually needs more:
 
-   Only escalate to a full `pnpm energy setup` (or `pnpm services up` on top of
-   this one) when an action actually needs running services — `pnpm db:push`,
-   `pnpm db:gen-types`, a dev server, or an integration test that hits the
-   database. Most tickets never need it. Read this worktree's ports from
+   - **Env files, a port slot, or a browser** (Playwright, chrome-devtools MCP,
+     a dev server):
+
+     ```bash
+     pnpm energy setup --no-services --no-tailscale
+     ```
+
+     `--no-services` skips the docker stack, `--no-tailscale` keeps the
+     generated URLs on localhost — which is what in-workspace browsers need.
+     This renders env files from 1Password. In Coder that is unattended
+     (`OP_SERVICE_ACCOUNT_TOKEN` is set); anywhere else check `op whoami`
+     first, and if it fails that is a blocking question
+     (`op signin --account autarc`).
+
+   - **A migration, or an integration test that hits the database:**
+
+     ```bash
+     autarc-db       # setup pass + slim supabase start + pnpm db:push
+     ```
+
+     It does the provisioning pass itself, so it replaces `autarc-prep` rather
+     than stacking on it. It prints the `SUPABASE_CONNECTION_STRING` to export
+     for the Go tests, and its `pnpm db:push` is itself the check that the
+     migration applies. No service stack, no tailnet — that is `autarc-up`,
+     which no ticket needs.
+
+   Most tickets never leave the first line. Read this worktree's ports from
    `.worktree/ports.env` (`WT_*_PORT`) — the defaults (5173/3000/8080/54322)
    belong to the main checkout.
 4. `git status`. A fresh worktree starts clean, so anything dirty is yours.
@@ -146,9 +165,9 @@ files. Units sharing a file are one unit.
   `isolation: "worktree"`: its edits would land in a different tree on a different
   branch, and never reach your PR.
 - **After the fan-in, run `AGENTS.md`'s scoped checks yourself** — sub-agent claims
-  are not evidence. Two things that section leaves implicit: `pnpm db:push` needs
-  `pnpm db:start` first, and `pnpm db:gen-types` already rebuilds type-library, so
-  no separate `pnpm lib:build`.
+  are not evidence. Two things that section leaves implicit: `autarc-db`
+  covers `db:start` + `db:push` in one step, and `pnpm db:gen-types` already
+  rebuilds type-library, so no separate `pnpm lib:build`.
 - Translations: `id-ID` is excluded because it is Crowdin's in-context
   pseudo-language (`crwdns…` markers), not a real locale — never hand-write keys
   into it, in `apps/web/src/locales/` or the ui-library's shared locales.

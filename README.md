@@ -92,14 +92,14 @@ others build on, not meant to be called directly. Symbol searches lean on the
 ## Autarc dev stack
 
 Five tiers over the monorepo's `pnpm energy` CLI, in escalating order.
-`autarc-prep` and `autarc-db` are worktree-aware and need no secrets, so an
-agent can run them; the rest assume the main checkout and are for local
-testing.
+`autarc-prep` and `autarc-db` are worktree-aware and run unattended in Coder,
+where `OP_SERVICE_ACCOUNT_TOKEN` renders the env files without a prompt; the
+rest assume the main checkout and are for local testing.
 
 | Command       | What it does                                                    |
 | ------------- | --------------------------------------------------------------- |
 | `autarc-prep` | deps + shared packages: enough to type-check, lint, unit-test    |
-| `autarc-db`   | Postgres + migrations: enough for integration tests              |
+| `autarc-db`   | provisioning + Postgres + migrations: integration tests          |
 | `autarc-up`   | env files + the containers dev needs (1Password sign-in)         |
 | `autarc-dev`  | the dev servers as tmux panes, no agent pane                     |
 | `autarc-stop` | kill the tmux session, free the dev ports                        |

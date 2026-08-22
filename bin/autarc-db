@@ -1,19 +1,25 @@
 #!/usr/bin/env bash
-# Tier 2, after autarc-prep: Postgres + migrations, nothing else. Enough to run
-# api-v2 integration tests and to check migrations apply. Worktree-aware.
+# Tier 2 (autarc-prep < autarc-db < autarc-up): Postgres + migrations.
+# Enough to run api-v2 integration tests and to check migrations apply, and
+# self-sufficient in a fresh worktree: the setup pass claims a port slot and
+# renders the env files supabase reads its project id and ports from. No
+# service stack, no tailnet, no catalog import — that is autarc-up.
+# Unattended on Coder (OP_SERVICE_ACCOUNT_TOKEN); on the Mac op may prompt.
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
-# A provisioned worktree pins its own ports; the main checkout uses the base.
-port=54322
-if [ -f .worktree/ports.env ]; then
-  port=$(sed -n 's/^WT_SB_DB_PORT=//p' .worktree/ports.env)
-  [ -n "$port" ] || { echo "no WT_SB_DB_PORT in ports.env — run 'pnpm energy setup'" >&2; exit 1; }
-fi
+echo "==> pnpm energy setup --no-services --no-tailscale"
+pnpm energy setup --no-services --no-tailscale
 
 echo "==> supabase start (db only)"
 pnpm supabase --workdir apps start -x gotrue,kong   # devenv.SupabaseExcludes
 echo "==> pnpm db:push"
 pnpm db:push
+
+# Read the port only now: a fresh worktree has no ports.env until setup writes it.
+port=54322
+if [ -f .worktree/ports.env ]; then
+  port=$(sed -n 's/^WT_SB_DB_PORT=//p' .worktree/ports.env)
+fi
 echo "✓ db up on :$port"
 echo "  integration tests: SUPABASE_CONNECTION_STRING=postgres://postgres:postgres@localhost:$port/postgres make test"
