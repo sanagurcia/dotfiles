@@ -57,10 +57,12 @@ ln -sf "$DOTFILES/claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
 ln -sf "$DOTFILES/claude/settings.json" "$HOME/.claude/settings.json"
 ln -sfn "$DOTFILES/claude/skills" "$HOME/.claude/skills"
 
-# Overlay an existing ~/.zshrc — skipped where there is none.
-if [ -f "$HOME/.zshrc" ]; then
+# Own ~/.zshrc where there is none (this Mac); overlay one we did not write (Coder).
+if [ -f "$HOME/.zshrc" ] && [ ! -L "$HOME/.zshrc" ]; then
 	ln -sf "$DOTFILES/zshrc" "$HOME/.zshrc.local"
 	if ! grep -q '\.zshrc\.local' "$HOME/.zshrc"; then
 		printf '\n# personal overlay (dotfiles)\n[ -f "$HOME/.zshrc.local" ] && . "$HOME/.zshrc.local"\n' >>"$HOME/.zshrc"
 	fi
+else
+	ln -sf "$DOTFILES/zshrc" "$HOME/.zshrc"
 fi
