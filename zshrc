@@ -18,8 +18,11 @@ export RIPGREP_CONFIG_PATH="$HOME/.ripgreprc"
 export AUTARC="postgresql://postgres@127.0.0.1:54322/postgres"
 export CLICOLOR=1
 
+# Put the default alias's node on PATH without sourcing nvm's 4.8k lines (210ms);
+# nvm itself loads on first use, so `nvm use` still works.
 export NVM_DIR="$HOME/.nvm"
-[ -s /opt/homebrew/opt/nvm/nvm.sh ] && . /opt/homebrew/opt/nvm/nvm.sh
+path=($HOME/.nvm/versions/node/v$(<$HOME/.nvm/alias/default)*/bin(N[-1]) $path)
+nvm() { unfunction nvm; . /opt/homebrew/opt/nvm/nvm.sh; nvm "$@"; }
 
 alias ll='ls -l' la='ls -a'
 alias ssh-coder='ssh main.heiliger-space.santiago.coder'
