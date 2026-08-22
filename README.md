@@ -78,16 +78,22 @@ first.
 | `refs`  | which apps/packages a symbol appears in, plus total files      |
 | `scripts` | list these commands                                          |
 
-Underscore-prefixed scripts (`_defs`, `_pick`, `_bat-at`) are internals the
-others build on, not meant to be called directly. Symbol searches lean on the
+Underscore-prefixed scripts (`_defs`, `_pick`, `_bat-at`, `_dpick`) are
+internals the others build on, not meant to be called directly. Symbol searches lean on the
 `src` and `tst` types defined in `ripgreprc`, so they skip tests by default.
 
 ## Repo helpers
 
-| Command | What it does                      |
-| ------- | --------------------------------- |
-| `gl`    | git log since diverging from main |
-| `dots`  | pull this repo and re-link        |
+| Command | What it does                                     |
+| ------- | ------------------------------------------------ |
+| `gl`    | the last 5 commits, for orientation              |
+| `gd`    | pick a file changed on this branch, see its diff |
+| `gs`    | pick a commit since main, then a file in it      |
+| `dots`  | pull this repo and re-link                       |
+
+`gd` and `gs` print a `--stat` overview first, then hand the changed files to
+`fzf`: the preview pane shows that file's diff through `delta`, Enter opens it
+full-screen in the pager, and in `gd` `ctrl-o` reads the file whole in `bat`.
 
 ## Autarc dev stack
 

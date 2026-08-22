@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Pick a file changed on this branch, view its diff. ctrl-o views the file whole.
+git --no-pager diff --stat main...HEAD
+_dpick -o main...HEAD

@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Pick a changed file from a diff, view its diff in delta. With -o, ctrl-o opens
+# the working-tree file whole in bat instead. The rest of the args are git-diff's.
+open=()
+[ "$1" = -o ] && { open=(--bind 'ctrl-o:execute(_bat-at {})'); shift; }
+
+# delta only queries the terminal for its background when it is not redirected,
+# and an fzf preview always is — so it would assume dark. Follow the macOS
+# setting ourselves, as batconfig's auto:system does for bat. Not macOS: light.
+mode=--light
+[ "$(defaults read -g AppleInterfaceStyle 2>/dev/null)" = Dark ] && mode=--dark
+
+preview="git diff $* -- {} | delta $mode --24-bit-color=always --paging=never --width=\$FZF_PREVIEW_COLUMNS"
+file=$(git diff --name-only "$@" |
+  fzf --preview "$preview" --preview-window 'up,70%,border-bottom' "${open[@]}") || exit 0
+git diff "$@" -- "$file"
