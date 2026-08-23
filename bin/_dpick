@@ -38,7 +38,15 @@ header=$(git diff --shortstat "$@" | awk '{
 cols=$(stty size </dev/tty 2>/dev/null | awk '{print $2}')
 width=0
 [ -n "$cols" ] && width=$(( cols - cols * 75 / 100 - 3 ))
-git diff --numstat "$@" | sort -k3 | _tree -v width=$width |
+# Sort on a key that marks each component 0 for a directory and 1 for a file, so
+# directories win every tie and a level's files collect below its subtrees rather
+# than scattering through them alphabetically. _tree needs the order it prints in.
+git diff --numstat "$@" |
+  awk -F'\t' '{
+    n = split($3, c, "/"); k = ""
+    for (i = 1; i <= n; i++) k = k ((i < n) ? "0" : "1") c[i] "/"
+    print k "\t" $0
+  }' | sort | cut -f2- | _tree -v width=$width |
   fzf --ansi -d'\t' --with-nth 1 --layout=reverse --no-scrollbar \
       --header "$header" \
       --preview "$preview" --preview-window 'right,75%,border-left' \
