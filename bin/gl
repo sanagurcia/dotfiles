@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-# The last 5 commits, for orientation.
-# 256-colour, darker than the basic ones and clear of the prompt's blue/green/
-# yellow: dark-grey date, teal author, plum hash. Lower numbers are darker.
-git log -5 --date=short \
-  --format="%C(240)%ad %C(30)%an %C(96)%h %Creset%s"

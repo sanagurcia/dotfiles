@@ -13,6 +13,11 @@
 	amend = commit -a --amend --no-edit
 	undo = !git reset --hard && git clean -f -d
 	ignore = update-index --assume-unchanged
+	# The last 5 commits, for orientation. 256-colour, darker than the basic
+	# ones and clear of the prompt's blue/green/yellow: dark-grey date, teal
+	# author, plum hash. Lower numbers are darker. The format is quoted so
+	# git's alias splitting keeps it as one argument.
+	lg = log -5 --date=short --format=\"%C(240)%ad %C(30)%an %C(96)%h %Creset%s\"
 
 [pull]
 	ff = only
