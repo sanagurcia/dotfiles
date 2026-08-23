@@ -127,6 +127,23 @@ foreground process, so air's compiled binary and node's children survive
 holding their ports — `autarc-dev` sweeps them before starting and
 `autarc-stop` after.
 
+## Terminal colours
+
+`ls`, git, delta and fzf do not carry colours of their own — they emit ANSI
+palette indices, and the terminal decides what those look like. iTerm2's stock
+palette is pastel, which on a white background leaves directories and diffs too
+light to read.
+
+`iterm2-white.itermcolors` is a palette for that background: the six hues at
+full saturation, each dark enough for 6:1 contrast, and the bright variants at
+4:5:1 rather than lighter still. Import it under iTerm2 → Settings → Profiles →
+Colors → Color Presets → Import, then select it. It is not symlinked; iTerm2
+copies a preset into its own preferences.
+
+Two slots break convention on purpose: 7 and 15 are normally near-white, which
+is invisible here, so they are dark greys instead. A program that draws white
+text on a coloured background will look wrong — nothing I use does.
+
 ## Prerequisites
 
 `gitconfig` sets `core.pager = delta` and `core.editor = nano`, so install both
