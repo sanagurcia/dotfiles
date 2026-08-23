@@ -42,6 +42,9 @@ Re-running the same command pulls the latest commit and re-links — that is als
 how you update a workspace after pushing here. It is not run automatically on
 workspace start; the symlinks simply persist on the home volume.
 
+`dots` wraps whichever applies: pull and re-link locally, or re-run `coder
+dotfiles` in a workspace. `exec zsh` afterwards to reload the shell config.
+
 ## Workspace rebuilds
 
 The Coder workspace is a container. Only `/home/coder` is a persistent volume —
@@ -83,13 +86,12 @@ first.
 called directly. Symbol searches lean on the `src` and `tst` types defined in
 `ripgreprc`, so they skip tests by default.
 
-## Repo helpers
+## Git helpers
 
 | Command      | What it does                                |
 | ------------ | ------------------------------------------- |
 | `git review` | browse this branch's diff as a tree         |
 | `git walk`   | walk the branch a commit at a time          |
-| `dots`       | pull this repo and re-link                  |
 
 `git review` and `git walk` are `git-` prefixed scripts on `PATH`, which is all
 git needs to offer them as subcommands. `_dpick`, `_dtree` and `_tree` are the
