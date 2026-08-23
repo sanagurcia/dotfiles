@@ -32,12 +32,15 @@ SAVEHIST=50000
 setopt hist_ignore_all_dups hist_reduce_blanks hist_verify inc_append_history
 
 # Prompt: host:cwd:branch / ❯
+# The colours are pinned to hex rather than named blue/green/yellow, which
+# resolve against whatever palette is rendering them — iTerm2's here, something
+# else on Coder, so the same prompt came out a different colour on each.
 autoload -Uz vcs_info
 zstyle ':vcs_info:git:*' formats '%b'
 precmd_functions+=(vcs_info)
 setopt prompt_subst
-PROMPT='%F{blue}%m%f:%F{green}%~%f:%F{yellow}${vcs_info_msg_0_}%f
-%F{blue}  ❯%f '
+PROMPT='%F{#6f8fb4}%m%f:%F{#93b379}%~%f:%F{#e5c179}${vcs_info_msg_0_}%f
+%F{#6f8fb4}  ❯%f '
 RPROMPT=''   # the Coder image starts starship, which leaves one on the right
 
 export RIPGREP_CONFIG_PATH="$HOME/.ripgreprc"
