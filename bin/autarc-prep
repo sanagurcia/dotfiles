@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# Tier 1 (autarc-prep < autarc-up < autarc-dev): make a fresh worktree buildable.
-# Enough to type-check, lint and run unit tests, full-stack. No env, no
-# containers — api-v2 integration tests self-skip without a DB connection.
+# Tier 1: make a fresh worktree buildable — type-check, lint, unit tests.
+
+# No env, no containers — api-v2 integration tests self-skip without a DB
+# connection.
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 echo "==> pnpm install"

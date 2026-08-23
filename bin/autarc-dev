@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Tier 4, main checkout: the dev servers as tmux panes, no agent pane.
+# Tier 4: the dev servers as tmux panes, no agent pane.
+
 # Defaults to web + api + api-v2 + worker; any args replace that set
 # (`pnpm energy launch --help` lists the app keys).
 set -euo pipefail

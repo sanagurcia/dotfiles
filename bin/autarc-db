@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Tier 2 (autarc-prep < autarc-db < autarc-up): Postgres + migrations.
-# Enough to run api-v2 integration tests and to check migrations apply, and
-# self-sufficient in a fresh worktree: the setup pass claims a port slot and
+# Tier 2: Postgres + migrations, for api-v2 integration tests.
+
+# Self-sufficient in a fresh worktree: the setup pass claims a port slot and
 # renders the env files supabase reads its project id and ports from. No
 # service stack, no tailnet, no catalog import — that is autarc-up.
 # Unattended on Coder (OP_SERVICE_ACCOUNT_TOKEN); on the Mac op may prompt.
