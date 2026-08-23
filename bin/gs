@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
-# Pick a file changed in a commit, view its diff. Without a SHA, pick one of the
-# commits since main — the preview shows its message and stat. Hash first, so
-# the picked line's SHA is field 1.
+# Browse a commit's diff as a tree. Without a SHA, pick one of the commits since
+# main — the preview shows its message and stat. Hash first, so the picked line's
+# SHA is field 1.
 sha=$1
 if [ -z "$sha" ]; then
   sha=$(git log --color=always --format="%C(96)%h %Creset%s" main..HEAD |
-    fzf --ansi -d' ' --preview 'git show --stat --color=always {1}' \
+    fzf --ansi -d' ' --layout=reverse --preview 'git show --stat --color=always {1}' \
         --preview-window 'up,70%,border-bottom' | awk '{print $1}')
   [ -n "$sha" ] || exit 0
 fi
-git --no-pager show --stat "$sha"
 _dpick "$sha^!"

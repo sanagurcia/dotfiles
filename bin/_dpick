@@ -1,16 +1,45 @@
 #!/usr/bin/env bash
-# Pick a changed file from a diff, view its diff in delta. With -o, ctrl-o opens
-# the working-tree file whole in bat instead. The rest of the args are git-diff's.
+# Browse a diff as a tree: files and directories on the left, that path's diff on
+# the right. With -o, ctrl-o opens the working-tree file whole in bat. The rest of
+# the args are git-diff's revisions.
+#
+# Enter runs the pager through fzf's execute rather than accepting, so quitting it
+# returns to the tree instead of ending the interface. Esc is the way out.
 open=()
-[ "$1" = -o ] && { open=(--bind 'ctrl-o:execute(_bat-at {})'); shift; }
+[ "$1" = -o ] && { open=(--bind 'ctrl-o:execute(_bat-at {2})'); shift; }
 
 # delta only queries the terminal for its background when it is not redirected,
 # and an fzf preview always is — so it would assume dark. Follow the macOS
 # setting ourselves, as batconfig's auto:system does for bat. Not macOS: light.
+# The execute bindings get a real terminal, so they need no flag.
 mode=--light
 [ "$(defaults read -g AppleInterfaceStyle 2>/dev/null)" = Dark ] && mode=--dark
 
-preview="git diff $* -- {} | delta $mode --24-bit-color=always --paging=never --width=\$FZF_PREVIEW_COLUMNS"
-file=$(git diff --name-only "$@" |
-  fzf --preview "$preview" --preview-window 'up,70%,border-bottom' "${open[@]}") || exit 0
-git diff "$@" -- "$file"
+# {2} is the real path; --with-nth 1 hides it and shows the tree column only.
+# gitconfig sets delta's navigate, whose hunk-header box draws a stub of a second
+# vertical rule right beside the preview's own border; drop it here. The pager
+# keeps it — there it is the only border, and navigate is actually usable.
+preview="git diff $* -- {2} | delta $mode --24-bit-color=always --paging=never \
+  --hunk-header-decoration-style=none --width=\$FZF_PREVIEW_COLUMNS"
+
+header=$(git diff --shortstat "$@" | awk '{
+  for (k = 1; k < NF; k++) {
+    if ($(k+1) ~ /^insertion/) ins = $k
+    if ($(k+1) ~ /^deletion/)  del = $k
+  }
+  printf "%s files  \033[32m+%d\033[0m \033[31m-%d\033[0m", $1, ins, del
+}')
+
+# fzf gives the preview 75% and takes a column for its border, two more for the
+# pointer and marker; the tree gets the rest. Ask the terminal directly: `tput
+# cols` here has a pipe for stdout, not a tty, so it would report terminfo's 80
+# however wide the window is. Width 0 means "unknown" — _tree then lays the tree
+# out by its own content rather than ellipsising against a wrong number.
+cols=$(stty size </dev/tty 2>/dev/null | awk '{print $2}')
+width=0
+[ -n "$cols" ] && width=$(( cols - cols * 75 / 100 - 3 ))
+git diff --numstat "$@" | sort -k3 | _tree -v width=$width |
+  fzf --ansi -d'\t' --with-nth 1 --layout=reverse --no-scrollbar \
+      --header "$header" \
+      --preview "$preview" --preview-window 'right,75%,border-left' \
+      --bind "enter:execute(git diff $* -- {2})" "${open[@]}"

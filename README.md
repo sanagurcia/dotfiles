@@ -78,7 +78,7 @@ first.
 | `refs`  | which apps/packages a symbol appears in, plus total files      |
 | `scripts` | list these commands                                          |
 
-Underscore-prefixed scripts (`_defs`, `_pick`, `_bat-at`, `_dpick`) are
+Underscore-prefixed scripts (`_defs`, `_pick`, `_bat-at`, `_dpick`, `_tree`) are
 internals the others build on, not meant to be called directly. Symbol searches lean on the
 `src` and `tst` types defined in `ripgreprc`, so they skip tests by default.
 
@@ -87,13 +87,16 @@ internals the others build on, not meant to be called directly. Symbol searches 
 | Command | What it does                                     |
 | ------- | ------------------------------------------------ |
 | `gl`    | the last 5 commits, for orientation              |
-| `gd`    | pick a file changed on this branch, see its diff |
+| `gd`    | browse this branch's diff as a tree              |
 | `gs`    | pick a commit since main, then a file in it      |
 | `dots`  | pull this repo and re-link                       |
 
-`gd` and `gs` print a `--stat` overview first, then hand the changed files to
-`fzf`: the preview pane shows that file's diff through `delta`, Enter opens it
-full-screen in the pager, and in `gd` `ctrl-o` reads the file whole in `bat`.
+Both open a two-pane reviewer: the changed paths as an indented tree on the
+left with each file's `+`/`-` counts, that path's diff through `delta` on the
+right. Directories are selectable too, so picking one shows its whole subtree's
+diff. Enter pages the current diff full-screen and returns to the tree on quit —
+Esc is the way out — and in `gd` `ctrl-o` reads the working-tree file whole in
+`bat`.
 
 ## Autarc dev stack
 

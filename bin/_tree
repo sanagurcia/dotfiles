@@ -1,0 +1,58 @@
+#!/usr/bin/env awk -f
+# git diff --numstat on stdin, sorted by path -> "display<TAB>path" lines for
+# fzf: one per directory and file, indented as a tree, with the +/- counts in a
+# column of their own down the right.
+#
+# -v width=N is the list pane's width. The count column is always CW wide — two
+# right-aligned fields of three digits each, so the numbers line up down their
+# right edges regardless of how deep the tree goes; names are ellipsised to fit
+# what is left, and four-digit counts run on and clip at the edge. The ellipsis keeps the tail of a name — it is
+# ..._integration_test.go vs ..._unit_test.go that tells two paths apart.
+#
+# Plain text is buffered and coloured in END, so the widths that decide padding
+# are never measured against escape sequences.
+BEGIN { CW = 8 }   # "+ddd-ddd"
+function emit(indent, label, count, path) {
+  ind[++m] = indent; lab[m] = label; cnt[m] = count; p[m] = path
+  if (length(indent) + length(label) > wide) wide = length(indent) + length(label)
+}
+function colour(c) {
+  if (c == "") return ""
+  if (c == "bin") return sprintf("%*s\033[90mbin\033[0m", CW - 3, "")
+  split(c, f, " ")
+  return sprintf("\033[32m%4s\033[0m\033[31m%4s\033[0m", f[1], f[2])
+}
+{
+  add = $1; del = $2; path = $3
+  n = split(path, part, "/"); pre = ""
+  # A directory line only when that component differs from the previous path's.
+  for (i = 1; i < n; i++) {
+    pre = pre part[i] "/"
+    if (part[i] != prev[i]) {
+      emit(sprintf("%*s", (i-1)*2, ""), part[i] "/", "", pre)
+      delete prev   # everything below a changed component is new too
+    }
+  }
+  emit(sprintf("%*s", (n-1)*2, ""), part[n], \
+       (add == "-") ? "bin" : "+" add " -" del, path)
+  split(path, prev, "/")
+}
+END {
+  # Pinned to the pane's right edge, so the column sits in the same place from
+  # one diff to the next. Width 0 means the caller could not tell: fall back to
+  # laying out against the longest name rather than guessing.
+  avail = (width > 0) ? width - CW - 1 : wide
+  if (avail < 8) avail = 8
+  for (i = 1; i <= m; i++) {
+    label = lab[i]; dlen = length(label); room = avail - length(ind[i])
+    if (dlen > room) {
+      tail = (room > 12) ? 10 : 4
+      label = substr(label, 1, room - tail - 1) "…" substr(label, dlen - tail + 1)
+      dlen = room   # the ellipsis is three bytes but one column, so count by hand
+    }
+    pad = avail - length(ind[i]) - dlen + 1
+    printf "%s%s%*s%s\t%s\n", ind[i], \
+      (cnt[i] == "") ? "\033[34m" label "\033[0m" : label, \
+      pad, "", colour(cnt[i]), p[i]
+  }
+}
