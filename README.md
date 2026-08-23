@@ -94,8 +94,9 @@ called directly. Symbol searches lean on the `src` and `tst` types defined in
 | `git walk`   | walk the branch a commit at a time          |
 
 `git review` and `git walk` are `git-` prefixed scripts on `PATH`, which is all
-git needs to offer them as subcommands. `_dpick`, `_dtree` and `_tree` are the
-internals they build on.
+git needs to offer them as subcommands. `_base`, `_dpick`, `_dtree` and `_tree`
+are the internals they build on. The branch is compared against origin's default
+branch, not the local branch of the same name, which drifts behind.
 
 Both open a two-pane reviewer: the changed paths as a tree on the left, that
 path's diff through `delta` on the right. Single-child directories fold into

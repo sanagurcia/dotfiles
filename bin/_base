@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Print the ref a branch forks from: origin's default branch, whatever it is
+# named. Not the local branch of the same name — in a workspace that one drifts
+# behind while worktrees are cut from the remote ref, and every commit it is
+# missing then shows up as part of the branch under review.
+git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null && exit
+for r in origin/main origin/master main master; do
+  git rev-parse --verify --quiet "$r" >/dev/null && { echo "$r"; exit; }
+done
+echo main

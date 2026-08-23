@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 # Browse this branch's diff as a tree. ctrl-o views the picked file whole.
-_dpick -o main...HEAD
+_dpick -o "$(_base)...HEAD"

@@ -1,4 +1,4 @@
-#!/usr/bin/env awk -f
+#!/usr/bin/env -S awk -f
 # git diff --numstat on stdin, sorted by path -> "display<TAB>path" lines for
 # fzf: one per directory and file, indented as a tree, with the +/- counts in a
 # column of their own down the right.

@@ -11,7 +11,7 @@ if [ -z "$sha" ]; then
   rows=$( { stty size </dev/tty; } 2>/dev/null | awk '{print $1}' )
   pv=70%
   [ -n "$rows" ] && [ "$rows" -gt 14 ] && pv=$(( rows - 8 ))
-  sha=$(git log --color=always --format="%C(96)%h %Creset%s" main..HEAD |
+  sha=$(git log --color=always --format="%C(96)%h %Creset%s" "$(_base)..HEAD" |
     fzf --ansi -d' ' --layout=reverse --preview 'git show --stat --color=always {1}' \
         --preview-window "up,$pv,border-bottom" | awk '{print $1}')
   [ -n "$sha" ] || exit 0
