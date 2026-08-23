@@ -85,16 +85,18 @@ they skip tests by default.
 
 ## Repo helpers
 
-| Command | What it does                                     |
-| ------- | ------------------------------------------------ |
-| `gl`    | the last 5 commits, for orientation              |
-| `gd`    | browse this branch's diff as a tree              |
-| `gs`    | pick a commit since main, then a file in it      |
-| `dots`  | pull this repo and re-link                       |
+| Command      | What it does                                |
+| ------------ | ------------------------------------------- |
+| `gl`         | the last 5 commits, for orientation         |
+| `git review` | browse this branch's diff as a tree         |
+| `git walk`   | walk the branch a commit at a time          |
+| `dots`       | pull this repo and re-link                  |
 
-Both open a two-pane reviewer: the changed paths as an indented tree on the
-left with each file's `+`/`-` counts, that path's diff through `delta` on the
-right. A directory holding nothing but one subdirectory folds into it, so a
+`git review` and `git walk` are `git-` prefixed scripts on `PATH`, which is all
+git needs to offer them as subcommands.
+
+Both open a two-pane reviewer: the changed paths as an indented tree on the left
+with each file's `+`/`-` counts, that path's diff through `delta` on the right. A directory holding nothing but one subdirectory folds into it, so a
 chain shows as one `apps/api/api-v2/` row instead of three, and directories
 sort ahead of files so a level's files collect below its subtrees. The tree is
 laid out to the width of its pane and re-drawn when the terminal resizes, so
@@ -103,7 +105,7 @@ changing font size mid-review does not leave it misaligned.
 Directories are selectable too, so picking one shows its whole subtree's diff.
 Enter pages the current diff full-screen and returns to the tree on quit — Esc
 is the way out. `ctrl-o` reads the picked file whole in `bat`: from the working
-tree in `gd`, as it was in that commit in `gs`.
+tree in `git review`, as it was in that commit in `git walk`.
 
 ## Autarc dev stack
 

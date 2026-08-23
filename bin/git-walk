@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Browse a commit's diff as a tree; ctrl-o reads the picked file as it was in that
+# Walk the branch a commit at a time, browsing each one's diff as a tree; ctrl-o reads the picked file as it was in that
 # commit. Without a SHA, pick one of the commits since main — the preview shows
 # its message and stat. Hash first, so the picked line's SHA is field 1.
 sha=$1

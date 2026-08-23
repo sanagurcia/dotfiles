@@ -8,6 +8,12 @@
 #
 # Enter runs the pager through fzf's execute rather than accepting, so quitting it
 # returns to the tree instead of ending the interface. Esc is the way out.
+# git diff prints paths from the root of the working tree but resolves a pathspec
+# against the current directory, so every preview would come up empty when run
+# from a subdirectory. Move to the root and they agree; children inherit it, so
+# the reload below lands there too.
+cd "$(git rev-parse --show-toplevel)" || exit
+
 open=()
 case $1 in
   -o) open=(--bind 'ctrl-o:execute(_bat-at {2})'); shift ;;
