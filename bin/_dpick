@@ -1,12 +1,19 @@
 #!/usr/bin/env bash
 # Browse a diff as a tree: files and directories on the left, that path's diff on
-# the right. With -o, ctrl-o opens the working-tree file whole in bat. The rest of
-# the args are git-diff's revisions.
+# the right. The remaining args are git-diff's revisions.
+#
+# ctrl-o reads the picked file whole, from wherever makes sense for the diff being
+# browsed: -o takes it from the working tree, -r REV out of that revision. bat
+# infers the syntax from --file-name, since the blob arrives on a pipe unnamed.
 #
 # Enter runs the pager through fzf's execute rather than accepting, so quitting it
 # returns to the tree instead of ending the interface. Esc is the way out.
 open=()
-[ "$1" = -o ] && { open=(--bind 'ctrl-o:execute(_bat-at {2})'); shift; }
+case $1 in
+  -o) open=(--bind 'ctrl-o:execute(_bat-at {2})'); shift ;;
+  -r) rev=$2; shift 2
+      open=(--bind "ctrl-o:execute(git show $rev:{2} | bat --color=always --file-name {2} --paging=always)") ;;
+esac
 
 # delta only queries the terminal for its background when it is not redirected,
 # and an fzf preview always is — so it would assume dark. Follow the macOS
