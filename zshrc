@@ -32,18 +32,15 @@ SAVEHIST=50000
 setopt hist_ignore_all_dups hist_reduce_blanks hist_verify inc_append_history
 
 # Prompt: host:cwd:branch / ❯
-# The colours are pinned to hex rather than named blue/green/yellow, which
-# resolve against whatever palette is rendering them — iTerm2's here, something
-# else on Coder, so the same prompt came out a different colour on each. These
-# keep iTerm2's hues but not its pastel saturation, which only went muddy when
-# darkened: saturation up, then dark enough for 10:1 against a white background.
-# The pastels they came from sat at 3.4:1, and the yellow at 1.7:1.
+# Hex, not named colours: those are palette indices, so the same prompt came out
+# a different colour in iTerm2 and on Coder. Fully saturated, dark enough to
+# read on white.
 autoload -Uz vcs_info
 zstyle ':vcs_info:git:*' formats '%b'
 precmd_functions+=(vcs_info)
 setopt prompt_subst
-PROMPT='%F{#12427b}%m%f:%F{#27490a}%~%f:%F{#573e0c}${vcs_info_msg_0_}%f
-%F{#12427b}  ❯%f '
+PROMPT='%F{#0051f3}%m%f:%F{#007400}%~%f:%F{#af00af}${vcs_info_msg_0_}%f
+%F{#0051f3}  ❯%f '
 RPROMPT=''   # the Coder image starts starship, which leaves one on the right
 
 export RIPGREP_CONFIG_PATH="$HOME/.ripgreprc"
