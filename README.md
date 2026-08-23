@@ -78,7 +78,7 @@ first.
 | `refs`  | which apps/packages a symbol appears in, plus total files      |
 | `scripts` | list these commands                                          |
 
-Underscore-prefixed scripts (`_defs`, `_pick`, `_bat-at`, `_dpick`, `_tree`) are
+Underscore-prefixed scripts (`_defs`, `_pick`, `_bat-at`, `_dpick`, `_dtree`, `_tree`) are
 internals the others build on, not meant to be called directly. Symbol searches lean on the
 `src` and `tst` types defined in `ripgreprc`, so they skip tests by default.
 
@@ -95,7 +95,9 @@ Both open a two-pane reviewer: the changed paths as an indented tree on the
 left with each file's `+`/`-` counts, that path's diff through `delta` on the
 right. A directory holding nothing but one subdirectory folds into it, so a
 chain shows as one `apps/api/api-v2/` row instead of three, and directories sort
-ahead of files so a level's files collect below its subtrees. Directories are selectable too, so picking one shows its whole subtree's
+ahead of files so a level's files collect below its subtrees. The tree is laid
+out to the width of its pane and re-drawn when the terminal resizes, so
+changing font size mid-review does not leave it misaligned. Directories are selectable too, so picking one shows its whole subtree's
 diff. Enter pages the current diff full-screen and returns to the tree on quit —
 Esc is the way out — and in `gd` `ctrl-o` reads the working-tree file whole in
 `bat`.

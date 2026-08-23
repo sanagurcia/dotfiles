@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Print a diff's changed paths as a tree, sized to the width of fzf's list pane.
+# The args are git-diff's revisions. Its own script so that _dpick can hand it to
+# fzf's reload and re-run it when the terminal resizes.
+#
+# fzf exports FZF_COLUMNS to the processes it spawns; run outside fzf, ask the
+# terminal instead — `tput cols` would report terminfo's 80 here, stdout being a
+# pipe rather than a tty. Width 0 means neither answered, and _tree then lays the
+# tree out against its own content rather than ellipsising to a wrong number.
+cols=${FZF_COLUMNS:-$( { stty size </dev/tty; } 2>/dev/null | awk '{print $2}' )}
+width=0
+[ -n "$cols" ] && width=$(( cols - cols * 75 / 100 - 3 ))
+
+# Sort on a key that marks each component 0 for a directory and 1 for a file, so
+# directories win every tie and a level's files collect below its subtrees rather
+# than scattering through them alphabetically. _tree prints the order it is given.
+git diff --numstat "$@" |
+  awk -F'\t' '{
+    n = split($3, c, "/"); k = ""
+    for (i = 1; i <= n; i++) k = k ((i < n) ? "0" : "1") c[i] "/"
+    print k "\t" $0
+  }' | sort | cut -f2- | _tree -v width=$width

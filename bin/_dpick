@@ -30,24 +30,9 @@ header=$(git diff --shortstat "$@" | awk '{
   printf "%s files  \033[32m+%d\033[0m \033[31m-%d\033[0m", $1, ins, del
 }')
 
-# fzf gives the preview 75% and takes a column for its border, two more for the
-# pointer and marker; the tree gets the rest. Ask the terminal directly: `tput
-# cols` here has a pipe for stdout, not a tty, so it would report terminfo's 80
-# however wide the window is. Width 0 means "unknown" — _tree then lays the tree
-# out by its own content rather than ellipsising against a wrong number.
-cols=$(stty size </dev/tty 2>/dev/null | awk '{print $2}')
-width=0
-[ -n "$cols" ] && width=$(( cols - cols * 75 / 100 - 3 ))
-# Sort on a key that marks each component 0 for a directory and 1 for a file, so
-# directories win every tie and a level's files collect below its subtrees rather
-# than scattering through them alphabetically. _tree needs the order it prints in.
-git diff --numstat "$@" |
-  awk -F'\t' '{
-    n = split($3, c, "/"); k = ""
-    for (i = 1; i <= n; i++) k = k ((i < n) ? "0" : "1") c[i] "/"
-    print k "\t" $0
-  }' | sort | cut -f2- | _tree -v width=$width |
-  fzf --ansi -d'\t' --with-nth 1 --layout=reverse --no-scrollbar \
+_dtree "$@" |
+  fzf --ansi -d'\t' --with-nth 1 --layout=reverse --no-scrollbar --track \
       --header "$header" \
+      --bind "resize:reload(_dtree $*)" \
       --preview "$preview" --preview-window 'right,75%,border-left' \
       --bind "enter:execute(git diff $* -- {2})" "${open[@]}"
