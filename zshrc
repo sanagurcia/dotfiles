@@ -38,6 +38,7 @@ precmd_functions+=(vcs_info)
 setopt prompt_subst
 PROMPT='%F{blue}%m%f:%F{green}%~%f:%F{yellow}${vcs_info_msg_0_}%f
 %F{blue}  ❯%f '
+RPROMPT=''   # the Coder image starts starship, which leaves one on the right
 
 export RIPGREP_CONFIG_PATH="$HOME/.ripgreprc"
 export AUTARC="postgresql://postgres@127.0.0.1:54322/postgres"
