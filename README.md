@@ -87,14 +87,12 @@ they skip tests by default.
 
 | Command      | What it does                                |
 | ------------ | ------------------------------------------- |
-| `git lg`     | the last 5 commits, for orientation         |
 | `git review` | browse this branch's diff as a tree         |
 | `git walk`   | walk the branch a commit at a time          |
 | `dots`       | pull this repo and re-link                  |
 
-`git lg` is an alias in `gitconfig`; the rest are scripts in `bin/`. `git review`
-and `git walk` are `git-` prefixed, which is all git needs to offer a script on
-`PATH` as a subcommand.
+`git review` and `git walk` are `git-` prefixed scripts on `PATH`, which is all
+git needs to offer them as subcommands.
 
 Both open a two-pane reviewer: the changed paths as an indented tree on the left
 with each file's `+`/`-` counts, that path's diff through `delta` on the right. A directory holding nothing but one subdirectory folds into it, so a
