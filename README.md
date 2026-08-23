@@ -93,7 +93,8 @@ internals the others build on, not meant to be called directly. Symbol searches 
 
 Both open a two-pane reviewer: the changed paths as an indented tree on the
 left with each file's `+`/`-` counts, that path's diff through `delta` on the
-right. Directories are selectable too, so picking one shows its whole subtree's
+right. A directory holding nothing but one subdirectory folds into it, so a
+chain shows as one `apps/api/api-v2/` row instead of three. Directories are selectable too, so picking one shows its whole subtree's
 diff. Enter pages the current diff full-screen and returns to the tree on quit —
 Esc is the way out — and in `gd` `ctrl-o` reads the working-tree file whole in
 `bat`.

@@ -3,15 +3,23 @@
 # fzf: one per directory and file, indented as a tree, with the +/- counts in a
 # column of their own down the right.
 #
+# A directory holding nothing but one subdirectory is folded into it, so a chain
+# like apps/ > api/ > api-v2/ is one apps/api/api-v2/ row rather than three. That
+# needs every path's children known before any row can be placed, so the input is
+# buffered and the tree is built in END.
+#
 # -v width=N is the list pane's width. The count column is always CW wide — two
 # right-aligned fields of three digits each, so the numbers line up down their
 # right edges regardless of how deep the tree goes; names are ellipsised to fit
-# what is left, and four-digit counts run on and clip at the edge. The ellipsis keeps the tail of a name — it is
-# ..._integration_test.go vs ..._unit_test.go that tells two paths apart.
+# what is left, and four-digit counts run on and clip at the edge. The ellipsis
+# keeps the tail of a name — it is ..._integration_test.go vs ..._unit_test.go
+# that tells two paths apart.
 #
 # Plain text is buffered and coloured in END, so the widths that decide padding
 # are never measured against escape sequences.
 BEGIN { CW = 8 }   # "+ddd-ddd"
+
+# One row, held back until END. Tracks the widest name so the counts can align.
 function emit(indent, label, count, path) {
   ind[++m] = indent; lab[m] = label; cnt[m] = count; p[m] = path
   if (length(indent) + length(label) > wide) wide = length(indent) + length(label)
@@ -22,22 +30,53 @@ function colour(c) {
   split(c, f, " ")
   return sprintf("\033[32m%4s\033[0m\033[31m%4s\033[0m", f[1], f[2])
 }
+# A directory folds into its child when that child is its only one, and is itself
+# a directory. Children carry a trailing slash exactly when they are directories.
+function folds(dir) { return nkid[dir] == 1 && kid[dir] ~ /\/$/ }
+
 {
-  add = $1; del = $2; path = $3
-  n = split(path, part, "/"); pre = ""
-  # A directory line only when that component differs from the previous path's.
-  for (i = 1; i < n; i++) {
-    pre = pre part[i] "/"
-    if (part[i] != prev[i]) {
-      emit(sprintf("%*s", (i-1)*2, ""), part[i] "/", "", pre)
-      delete prev   # everything below a changed component is new too
+  path[++items] = $3
+  count[items] = ($1 == "-") ? "bin" : "+" $1 " -" $2
+
+  # Every component's immediate children, deduplicated: a directory is named
+  # once per path that runs through it.
+  n = split($3, part, "/"); parent = ""
+  for (i = 1; i <= n; i++) {
+    child = (i < n) ? part[i] "/" : part[i]
+    if (!((parent SUBSEP child) in seen)) {
+      seen[parent SUBSEP child] = 1
+      nkid[parent]++; kid[parent] = child
     }
+    parent = parent child
   }
-  emit(sprintf("%*s", (n-1)*2, ""), part[n], \
-       (add == "-") ? "bin" : "+" add " -" del, path)
-  split(path, prev, "/")
 }
+
 END {
+  for (j = 1; j <= items; j++) {
+    # Split the path into display segments, folding as we go. Directories that
+    # fold keep accumulating into the current segment instead of closing it.
+    n = split(path[j], part, "/")
+    nseg = 0; cur = ""; dir = ""; full = ""
+    for (i = 1; i < n; i++) {
+      dir = dir part[i] "/"; cur = cur part[i] "/"
+      if (!folds(dir)) { seg[++nseg] = cur; cur = "" }
+    }
+    seg[++nseg] = part[n]
+    for (i = 1; i <= nseg; i++) { full = full seg[i]; segpath[i] = full }
+
+    # A row for each segment that differs from the previous path's.
+    for (i = 1; i < nseg; i++)
+      if (seg[i] != prev[i]) {
+        emit(sprintf("%*s", (i-1)*2, ""), seg[i], "", segpath[i])
+        delete prev   # everything below a changed segment is new too
+      }
+    emit(sprintf("%*s", (nseg-1)*2, ""), seg[nseg], count[j], segpath[nseg])
+
+    delete prev
+    for (i = 1; i <= nseg; i++) prev[i] = seg[i]
+    delete seg
+  }
+
   # Pinned to the pane's right edge, so the column sits in the same place from
   # one diff to the next. Width 0 means the caller could not tell: fall back to
   # laying out against the longest name rather than guessing.
