@@ -45,18 +45,25 @@ export AUTARC="postgresql://postgres@127.0.0.1:54322/postgres"
 export CLICOLOR=1
 
 # Put the default alias's node on PATH without sourcing nvm's 4.8k lines (210ms);
-# nvm itself loads on first use, so `nvm use` still works.
-export NVM_DIR="$HOME/.nvm"
-path=($HOME/.nvm/versions/node/v$(<$HOME/.nvm/alias/default)*/bin(N[-1]) $path)
-nvm() { unfunction nvm; . /opt/homebrew/opt/nvm/nvm.sh; nvm "$@"; }
+# nvm itself loads on first use, so `nvm use` still works. Mac only — the Coder
+# image has no nvm and brings its own node.
+if [ -r $HOME/.nvm/alias/default ]; then
+  export NVM_DIR="$HOME/.nvm"
+  path=($NVM_DIR/versions/node/v$(<$NVM_DIR/alias/default)*/bin(N[-1]) $path)
+  nvm() { unfunction nvm; . /opt/homebrew/opt/nvm/nvm.sh; nvm "$@"; }
+fi
 
 alias ll='ls -l' la='ls -a'
 alias ssh-coder='ssh main.heiliger-space.santiago.coder'
 
 # Ghost-text the rest of a command from history; right arrow accepts it. The
-# grey is tuned for a light terminal — lower is darker.
+# grey is tuned for a light terminal — lower is darker. The style applies either
+# way; the Coder image sources its own copy before this file, so only Homebrew's
+# needs loading here.
 ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=245'
-source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+_as=/opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+[ -r $_as ] && source $_as
+unset _as
 
 # Ctrl-R fuzzy-searches the whole history, Ctrl-T drops a file path into the
 # line I am typing, Alt-C cds into a directory I pick.
