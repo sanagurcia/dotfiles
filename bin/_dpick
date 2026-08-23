@@ -14,14 +14,15 @@
 # the reload below lands there too.
 cd "$(git rev-parse --show-toplevel)" || exit
 
-# gitconfig turns delta's line numbers on, which is what we want for reading and
-# in the way for copying a hunk out. ctrl-l toggles them, for the preview and the
-# pager alike. delta has no --line-numbers=false and a feature cannot override the
-# main [delta] section, so "off" is both number formats blanked. The state is a
-# file because every preview and every execute binding is its own shell.
-nums=$(mktemp -t dpick-nums) # empty: numbers on
-trap 'rm -f "$nums"' EXIT
+# Browsing a diff reads better without delta's line numbers, so start with them
+# off and let ctrl-l bring them back, for the preview and the pager alike. delta
+# has no --line-numbers=false and a feature cannot override the main [delta]
+# section, so "off" is both number formats blanked. The state is a file because
+# every preview and every execute binding is its own shell.
 off="--line-numbers-left-format= --line-numbers-right-format="
+nums=$(mktemp -t dpick-nums) # holding $off: numbers off, empty: on
+trap 'rm -f "$nums"' EXIT
+printf %s "$off" > "$nums"
 numflag="\$(cat $nums)"
 
 open=()
