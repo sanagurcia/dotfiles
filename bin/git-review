@@ -5,6 +5,14 @@
 # gh is a network call: it can be slow, unauthenticated, or on a branch with no
 # PR at all. Let it run alongside the tree rather than in front of it — the file
 # fills in whenever it fills in, and staying empty is one of the answers.
+#
+# -w/--worktree reviews the uncommitted changes instead: git diff HEAD, so staged
+# and unstaged together. Nothing is on GitHub yet, so there is no description to
+# fetch and no row to put it in — _dtree only draws one when DPICK_DOC is set.
+case $1 in
+  -w|--worktree) exec _dpick -o HEAD ;;
+esac
+
 doc=$(mktemp -t review-pr)
 trap 'rm -f "$doc"' EXIT
 
