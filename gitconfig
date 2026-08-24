@@ -32,3 +32,5 @@
 [delta]
 	navigate = true
 	line-numbers = true
+	# Tabs, otherwise 8 columns wide.
+	tabs = 2
