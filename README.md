@@ -105,7 +105,12 @@ one row, directories sort ahead of files, and the tree re-draws on resize.
 Directories are selectable too, so picking one shows its whole subtree's diff.
 Enter pages the current diff full-screen and returns to the tree on quit — Esc
 is the way out. `ctrl-o` reads the picked file whole in `bat`: from the working
-tree in `git review`, as it was in that commit in `git walk`.
+tree in `git review`, as it was in that commit in `git walk`. `ctrl-l` toggles
+delta's line numbers.
+
+`git review` also puts the PR's description in a row above the tree, fetched
+with `gh` in the background so a slow, unauthenticated or PR-less branch never
+holds the tree up — the row then says there is nothing to show.
 
 ## Autarc dev stack
 

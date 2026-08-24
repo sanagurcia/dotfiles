@@ -1,3 +1,13 @@
 #!/usr/bin/env bash
-# Browse this branch's diff as a tree. ctrl-o views the picked file whole.
-_dpick -o "$(_base)...HEAD"
+# Browse this branch's diff as a tree. ctrl-o views the picked file whole. The
+# top row is the PR's description, when GitHub has one to give.
+#
+# gh is a network call: it can be slow, unauthenticated, or on a branch with no
+# PR at all. Let it run alongside the tree rather than in front of it — the file
+# fills in whenever it fills in, and staying empty is one of the answers.
+doc=$(mktemp -t review-pr)
+trap 'rm -f "$doc"' EXIT
+gh pr view --json number,title,body \
+   --template '{{printf "# #%v %v\n\n%v" .number .title .body}}' >"$doc" 2>/dev/null &
+
+DPICK_DOC=$doc _dpick -o "$(_base)...HEAD"

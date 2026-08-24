@@ -27,9 +27,9 @@ numflag="\$(cat $nums)"
 
 open=()
 case $1 in
-  -o) open=(--bind 'ctrl-o:execute(_bat-at {2})'); shift ;;
+  -o) open=(--bind 'ctrl-o:execute([ {2} = @pr ] || _bat-at {2})'); shift ;;
   -r) rev=$2; shift 2
-      open=(--bind "ctrl-o:execute(git show $rev:{2} | bat --color=always --file-name {2} --paging=always --pager \"less -R\")") ;;
+      open=(--bind "ctrl-o:execute([ {2} = @pr ] || git show $rev:{2} | bat --color=always --file-name {2} --paging=always --pager \"less -R\")") ;;
 esac
 
 # delta only queries the terminal for its background when it is not redirected,
@@ -43,15 +43,22 @@ mode=--light
 # gitconfig sets delta's navigate, whose hunk-header box draws a stub of a second
 # vertical rule right beside the preview's own border; drop it here. The pager
 # keeps it — there it is the only border, and navigate is actually usable.
-preview="git diff $* -- {2} | delta $mode --24-bit-color=always --paging=never \
+diffprev="git diff $* -- {2} | delta $mode --24-bit-color=always --paging=never \
   --hunk-header-decoration-style=none --width=\$FZF_PREVIEW_COLUMNS $numflag"
+
+# _dtree's PR row carries a sentinel path rather than a real one: show that file,
+# not a diff of it. An empty one is gh having found no PR, or not reached GitHub.
+docprev="bat --color=always --style=plain --language=md --paging=never \
+  --terminal-width=\$FZF_PREVIEW_COLUMNS \"\$DPICK_DOC\""
+none="echo 'No PR description.'"
+preview="if [ {2} = @pr ]; then [ -s \"\$DPICK_DOC\" ] && $docprev || $none; else $diffprev; fi"
 
 header=$(git diff --shortstat "$@" | awk '{
   for (k = 1; k < NF; k++) {
     if ($(k+1) ~ /^insertion/) ins = $k
     if ($(k+1) ~ /^deletion/)  del = $k
   }
-  printf "%s files  \033[32m+%d\033[0m \033[31m-%d\033[0m  \033[90mctrl-l numbers\033[0m", $1, ins, del
+  printf "%s files  \033[32m+%d\033[0m \033[31m-%d\033[0m", $1, ins, del
 }')
 
 _dtree "$@" |
@@ -59,6 +66,6 @@ _dtree "$@" |
       --header "$header" \
       --bind "resize:reload(_dtree $*)" \
       --preview "$preview" --preview-window 'right,75%,border-left' \
-      --bind "enter:execute(git diff $* -- {2} | delta --paging=always $numflag)" \
+      --bind "enter:execute(if [ {2} = @pr ]; then [ -s \"\$DPICK_DOC\" ] && bat --color=always --style=plain --language=md --paging=always --pager 'less -R' \"\$DPICK_DOC\"; else git diff $* -- {2} | delta --paging=always $numflag; fi)" \
       --bind "ctrl-l:execute-silent([ -s $nums ] && : > $nums || printf %s '$off' > $nums)+refresh-preview" \
       "${open[@]}"
