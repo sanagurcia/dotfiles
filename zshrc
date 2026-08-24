@@ -57,7 +57,14 @@ if [ -r $HOME/.nvm/alias/default ]; then
 fi
 
 alias ll='ls -l' la='ls -a'
-alias ssh-coder='ssh main.heiliger-space.santiago.coder'
+# Always land in a tmux session on the coder box, so I don't forget to start one.
+# `ssh-coder <cmd>` still runs a one-off command; `-n <name>` picks another session.
+ssh-coder() {
+  local host=main.heiliger-space.santiago.coder session=coder
+  [[ $1 == -n ]] && { session=$2; shift 2; }
+  (( $# )) && { ssh "$host" "$@"; return; }
+  ssh -t "$host" "tmux new-session -A -D -s ${(q)session}"
+}
 
 # Ghost-text the rest of a command from history; right arrow accepts it. The
 # grey is tuned for a light terminal — lower is darker. The style applies either
