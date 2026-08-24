@@ -7,7 +7,16 @@
 # fills in whenever it fills in, and staying empty is one of the answers.
 doc=$(mktemp -t review-pr)
 trap 'rm -f "$doc"' EXIT
+
+# Only the description is worth reading here: everything from the release notes
+# heading down is generated summary, so cut at that heading — any level, any
+# case — and drop the blank lines left hanging off the end. GitHub's bodies come
+# back with CRLF endings; the pager has no use for the CR.
 gh pr view --json number,title,body \
-   --template '{{printf "# #%v %v\n\n%v" .number .title .body}}' >"$doc" 2>/dev/null &
+   --template '{{printf "# #%v %v\n\n%v" .number .title .body}}' 2>/dev/null |
+  awk '{ sub(/\r$/, "") }
+       tolower($0) ~ /^#+[[:space:]]*release note/ { exit }
+       /^[[:space:]]*$/ { blanks++; next }
+       { while (blanks-- > 0) print ""; blanks = 0; print }' >"$doc" &
 
 DPICK_DOC=$doc _dpick -o "$(_base)...HEAD"
