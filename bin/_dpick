@@ -48,8 +48,13 @@ diffprev="git diff $* -- {2} | delta $mode --24-bit-color=always --paging=never 
 
 # _dtree's PR row carries a sentinel path rather than a real one: show that file,
 # not a diff of it. An empty one is gh having found no PR, or not reached GitHub.
-docprev="bat --color=always --style=plain --language=md --paging=never \
-  --terminal-width=\$FZF_PREVIEW_COLUMNS \"\$DPICK_DOC\""
+#
+# bat's wrap=auto is never when its output is a pipe, and a description is prose
+# that runs well past the pane — so fold it first, at spaces rather than mid-word
+# as bat and less both would. The width comes from whoever has one: fzf's pane
+# for the preview, the terminal for the pager.
+docprev="fold -s -w \$FZF_PREVIEW_COLUMNS \"\$DPICK_DOC\" \
+  | bat --color=always --style=plain --language=md --paging=never"
 none="echo 'No PR description.'"
 preview="if [ {2} = @pr ]; then [ -s \"\$DPICK_DOC\" ] && $docprev || $none; else $diffprev; fi"
 
@@ -66,6 +71,6 @@ _dtree "$@" |
       --header "$header" \
       --bind "resize:reload(_dtree $*)" \
       --preview "$preview" --preview-window 'right,75%,border-left' \
-      --bind "enter:execute(if [ {2} = @pr ]; then [ -s \"\$DPICK_DOC\" ] && bat --color=always --style=plain --language=md --paging=always --pager 'less -R' \"\$DPICK_DOC\"; else git diff $* -- {2} | delta --paging=always $numflag; fi)" \
+      --bind "enter:execute(if [ {2} = @pr ]; then [ -s \"\$DPICK_DOC\" ] && fold -s -w \"\$(tput cols)\" \"\$DPICK_DOC\" | bat --color=always --style=plain --language=md --paging=always --pager 'less -R'; else git diff $* -- {2} | delta --paging=always $numflag; fi)" \
       --bind "ctrl-l:execute-silent([ -s $nums ] && : > $nums || printf %s '$off' > $nums)+refresh-preview" \
       "${open[@]}"

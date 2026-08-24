@@ -110,7 +110,8 @@ delta's line numbers.
 
 `git review` also puts the PR's description in a row above the tree, fetched
 with `gh` in the background so a slow, unauthenticated or PR-less branch never
-holds the tree up — the row then says there is nothing to show.
+holds the tree up — the row then says there is nothing to show. The body is cut
+at its release notes heading and word-wrapped to the pane.
 
 ## Autarc dev stack
 
