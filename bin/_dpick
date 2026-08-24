@@ -29,7 +29,7 @@ open=()
 case $1 in
   -o) open=(--bind 'ctrl-o:execute(_bat-at {2})'); shift ;;
   -r) rev=$2; shift 2
-      open=(--bind "ctrl-o:execute(git show $rev:{2} | bat --color=always --file-name {2} --paging=always)") ;;
+      open=(--bind "ctrl-o:execute(git show $rev:{2} | bat --color=always --file-name {2} --paging=always --pager \"less -R\")") ;;
 esac
 
 # delta only queries the terminal for its background when it is not redirected,

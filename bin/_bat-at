@@ -2,9 +2,14 @@
 # Show FILE, whole. With LINE, highlight it and open the pager a third of a screen
 # above it. In an fzf preview bat writes to a pipe, so the pager spec is inert and
 # _pick's +{2}-/3 does the same positioning.
+#
+# bat's own less args include -F -X, so a file shorter than the screen is dumped
+# inline and less exits at once — under fzf's execute that is painted over by the
+# redraw and reads as ctrl-o doing nothing. Name the pager ourselves, without
+# either flag: less takes the alternate screen and waits for q.
 f=$1 l=$2
 if [ -n "$l" ]; then
-  bat --color=always -H "$l" --pager "less -R -F -X -j.33 +$l" "$f"
+  bat --color=always -H "$l" --pager "less -R -j.33 +$l" "$f"
 else
-  bat --color=always "$f"
+  bat --color=always --pager "less -R" "$f"
 fi
