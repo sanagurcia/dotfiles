@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# One directory as "name<TAB>path<TAB>line" rows for _fpick's list pane: the
+# parent as .., then subdirectories, then files. Its own script so that _fpick
+# can hand it to fzf's reload and re-run it on every hop.
+#
+# MARK and LINE put LINE on the row whose path is MARK and 0 on every other, so
+# the preview of the file we arrived on opens at the hit rather than the top.
+#
+# fd rather than a glob: it leaves out what .gitignore does, so a directory
+# reads as its sources and not as its build output. It prefixes ./ when asked
+# about . and marks directories with a trailing slash; strip the one, keep the
+# other. Paths are root-relative, so . is the top and .. stops there.
+dir=${1:-.}; mark=$2; line=${3:-0}
+dir=${dir#./}; [ -z "$dir" ] && dir=.
+
+[ "$dir" = . ] || printf '\033[34m../\033[0m\t%s\t0\n' "$(dirname "$dir")"
+
+fd -d 1 -t d . "$dir" | sed 's|^\./||' | sort |
+  while IFS= read -r p; do
+    printf '\033[34m%s/\033[0m\t%s\t0\n' "$(basename "$p")" "${p%/}"
+  done
+
+fd -d 1 -t f . "$dir" | sed 's|^\./||' | sort |
+  while IFS= read -r p; do
+    l=0; [ "$p" = "$mark" ] && l=$line
+    printf '%s\t%s\t%s\n' "$(basename "$p")" "$p" "$l"
+  done

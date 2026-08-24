@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Show FILE, whole. With LINE, highlight it and open the pager a third of a screen
-# above it. In an fzf preview bat writes to a pipe, so the pager spec is inert and
-# _pick's +{2}-/3 does the same positioning.
+# above it. fzf runs a preview on a pty rather than a pipe, but the pager still
+# never takes the screen there, so the +$l spec is inert in one and the window's
+# own offset does the positioning — _pick's +{2}-/3, _fpick's +{3}-/3.
 #
 # bat's own less args include -F -X, so a file shorter than the screen is dumped
 # inline and less exits at once — under fzf's execute that is painted over by the

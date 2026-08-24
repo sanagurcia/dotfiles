@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# Browse the directory around a file: its neighbours on the left, the file
+# itself on the right. _pick lands here once a hit is picked, so fs, ff and defs
+# all arrive with a line to open on.
+#
+# Enter runs the pager through fzf's execute rather than accepting, so quitting
+# it returns to the list instead of ending the interface. Esc is the way out.
+# Enter on a directory hops there instead and .. climbs back, which keeps the
+# browse under the repo root without a second binding to guard it.
+#
+# Paths are root-relative: _pick's own are relative to wherever it was run, and
+# only a common base keeps the .. chain and bat's header honest. Resolve before
+# moving, since the argument is relative to the old directory.
+file=$1 line=${2:-0}
+root=$(git rev-parse --show-toplevel 2>/dev/null) || root=/
+abs=$(cd "$(dirname "$file")" 2>/dev/null && pwd)/$(basename "$file")
+cd "$root" || exit
+rel=${abs#"${root%/}"/}   # trailing slash trimmed first, so this also strips at /
+dir=$(dirname "$rel")
+
+# A directory previews as its own listing, a file as itself. {3} is the hit line
+# on the row we arrived on and 0 on every other; bat highlights it, and 0 is a
+# valid scroll offset too, so the window spec needs no branch of its own.
+preview='if [ -d {2} ]; then _flist {2} | cut -f1
+         elif [ {3} = 0 ]; then _bat-at {2}
+         else _bat-at {2} {3}; fi'
+
+# fzf substitutes the placeholders before the transform runs, so {2} arrives
+# quoted and $d carries the bare path on into the actions it prints.
+hop='if [ -d {2} ]; then d={2}
+       echo "reload(_flist \"$d\")+pos(1)+change-header($d)"
+     else echo "execute(_bat-at {2} {3})"; fi'
+
+# --sync holds the first render until the list is in, so pos lands on the row we
+# arrived on rather than on whatever had loaded by the time start fired.
+list=$(_flist "$dir" "$rel" "$line")
+pos=$(printf '%s\n' "$list" | awk -F'\t' -v p="$rel" '$2 == p { print NR; exit }')
+
+printf '%s\n' "$list" |
+  fzf --ansi -d'\t' --with-nth 1 --sync --layout=reverse --no-scrollbar --track \
+      --header "$dir" \
+      --preview "$preview" --preview-window "right,75%,border-left,+{3}-/3" \
+      --bind "start:pos(${pos:-1})" \
+      --bind "enter:transform($hop)"

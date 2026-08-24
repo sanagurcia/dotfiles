@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Pick a hit (file[:line:...]) from stdin, open it in bat.
+# Pick a hit (file[:line:...]) from stdin, then browse the directory it lives in
+# with the file itself open on the right. fs, ff and defs all end up here.
 sel=$(fzf --ansi -d: --preview '_bat-at {1} {2}' --preview-window 'up,70%,border-bottom,+{2}-/3') || exit 0
 IFS=: read -r file line _ <<<"$sel"
-_bat-at "$file" "$line"
+_fpick "$file" "$line"
