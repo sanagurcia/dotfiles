@@ -230,6 +230,12 @@ the next runs:
 Fix everything that fails. A failure predating your branch is not yours: baseline
 it against `origin/main`, say so, move on.
 
+**Whatever you fix here goes in its own commit**, on top of the series — never
+amended into the commits it belongs to. Those are pushed by the time anything
+here runs, so amending means force-pushing a branch someone may already be
+reading. A separate commit is also the honest record: the checks found something
+and it was fixed, which is what happened.
+
 ## Phase 7 — PR
 
 **Only on the user's explicit go.** They have been reviewing all session; do not
