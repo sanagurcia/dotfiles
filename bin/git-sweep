@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Delete every local branch and worktree except main. No checks of any kind:
+# unmerged and unpushed work goes with them.
+set -euo pipefail
+
+# Work from the main worktree, on main: a worktree removal takes its directory
+# (and this shell's cwd) with it, and a branch that is checked out anywhere
+# cannot be deleted.
+main=$(git worktree list --porcelain | awk 'NR==1{print substr($0,10)}')
+cd "$main"
+git switch -q main
+
+w=0
+while read -r path; do
+	git worktree remove --force "$path" && w=$((w + 1))
+done < <(git worktree list --porcelain | awk '/^worktree /{print substr($0,10)}' | tail -n +2)
+git worktree prune
+
+b=0
+for branch in $(git for-each-ref --format='%(refname:short)' refs/heads/); do
+	[ "$branch" = main ] && continue
+	git branch -D "$branch" >/dev/null && b=$((b + 1))
+done
+
+echo "$w worktrees, $b branches deleted"

@@ -94,6 +94,7 @@ called directly. Symbol searches lean on the `src` and `tst` types defined in
 | `git review -w`       | the same for the uncommitted changes                  |
 | `git review -c [SHA]` | one commit of the branch, picked if none given        |
 | `git review -v`       | include the tests and locale files, hidden by default |
+| `git sweep`           | delete every local branch and worktree except main    |
 
 `git review` is a `git-` prefixed script on `PATH`, which is all git needs to
 offer it as a subcommand. `_base`, `_dpick`, `_ddiff`, `_dstat`, `_dtree` and
@@ -119,6 +120,11 @@ The default mode also puts the PR's description in a row above the tree, fetched
 with `gh` in the background so a slow, unauthenticated or PR-less branch never
 holds the tree up — the row then says there is nothing to show. The body is cut
 at its release notes heading and word-wrapped to the pane.
+
+`git sweep` is the cleanup counterpart, and does no checking whatsoever: it
+switches the main checkout to main, force-removes every other worktree with its
+directory, force-deletes every other local branch, and prints the two counts.
+Unmerged and unpushed work is gone with them.
 
 ## Autarc dev stack
 
