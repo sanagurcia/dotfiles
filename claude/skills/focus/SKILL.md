@@ -92,9 +92,14 @@ Never open with a finished plan — the point is to find the design together.
 - **Re-plan when a decision invalidates the shape.** Cheaper than forcing the
   old plan around the new constraint.
 
-When the user says **"ok plan"** (or equivalent), write the explicit plan:
+When the user says **"ok plan"** (or equivalent), write the explicit plan.
+Explicit means *decided*, not *granular*: what changes and why, in the language
+of the design. Still no file lists — the user is approving a shape, and a
+paragraph of paths is something only you can check.
 
-- The change per file, one line each.
+- **What changes semantically**, area by area: the data model, the write path,
+  what the user ends up seeing. Name a file only where it *is* the decision — a
+  shared component with many callers, a migration.
 - **A proposed series of commits**, when the work splits cleanly. Each commit
   should be independently reviewable and independently revertable, and land in
   an order where each one leaves the tree coherent. Schema and backend before
@@ -188,13 +193,6 @@ the next runs:
    **The ref is not optional.** By this phase the work is committed, and bare
    `--changed` means *uncommitted* changes — it would find nothing and pass
    vacuously, which reads exactly like success.
-
-   Then ask whether that set is actually enough. Vitest relates tests to changed
-   files through the import graph, so it misses a caller that breaks without
-   importing what you edited — a changed i18n key, a renamed test id, a shared
-   component whose consumers assert on its markup. Where you can name such a
-   file, add it by path alongside the flag. Widen deliberately and say what you
-   added; never widen to everything.
 
 5. **Go tests**, package-scoped: `go test ./internal/<pkg>/`. Integration tests
    skip without `SUPABASE_CONNECTION_STRING` — pass the local one, or they pass
