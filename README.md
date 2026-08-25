@@ -88,27 +88,32 @@ called directly. Symbol searches lean on the `src` and `tst` types defined in
 
 ## Git helpers
 
-| Command      | What it does                                |
-| ------------ | ------------------------------------------- |
-| `git review` | browse this branch's diff as a tree         |
-| `git walk`   | walk the branch a commit at a time          |
+| Command               | What it does                                     |
+| --------------------- | ------------------------------------------------ |
+| `git review`          | browse this branch's diff as a tree              |
+| `git review -w`       | the same for the uncommitted changes             |
+| `git review -c [SHA]` | one commit of the branch, picked if none given   |
+| `git review -v`       | include test files, which are skipped by default |
 
-`git review` and `git walk` are `git-` prefixed scripts on `PATH`, which is all
-git needs to offer them as subcommands. `_base`, `_dpick`, `_dtree` and `_tree`
-are the internals they build on. The branch is compared against origin's default
-branch, not the local branch of the same name, which drifts behind.
+`git review` is a `git-` prefixed script on `PATH`, which is all git needs to
+offer it as a subcommand. `_base`, `_dpick`, `_dtree` and `_tree` are the
+internals it builds on. The branch is compared against origin's default branch,
+not the local branch of the same name, which drifts behind.
 
-Both open a two-pane reviewer: the changed paths as a tree on the left, that
-path's diff through `delta` on the right. Single-child directories fold into
-one row, directories sort ahead of files, and the tree re-draws on resize.
+Every mode opens a two-pane reviewer: the changed paths as a tree on the left,
+that path's diff through `delta` on the right. Single-child directories fold
+into one row, directories sort ahead of files, and the tree re-draws on resize.
 
 Directories are selectable too, so picking one shows its whole subtree's diff.
 Enter pages the current diff full-screen and returns to the tree on quit — Esc
 is the way out. `ctrl-o` reads the picked file whole in `bat`: from the working
-tree in `git review`, as it was in that commit in `git walk`. `ctrl-l` toggles
-delta's line numbers.
+tree, or as it was in that commit under `-c`. `ctrl-l` toggles delta's line
+numbers.
 
-`git review` also puts the PR's description in a row above the tree, fetched
+`*.test.*`, `*.spec.*` and `*_test.go` are left out of the tree, the stat and
+every diff unless `-v` asks for them.
+
+The default mode also puts the PR's description in a row above the tree, fetched
 with `gh` in the background so a slow, unauthenticated or PR-less branch never
 holds the tree up — the row then says there is nothing to show. The body is cut
 at its release notes heading and word-wrapped to the pane.

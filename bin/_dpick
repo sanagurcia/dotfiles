@@ -39,11 +39,19 @@ esac
 mode=--light
 [ "$(defaults read -g AppleInterfaceStyle 2>/dev/null)" = Dark ] && mode=--dark
 
+# git-review's DPICK_SKIP holds the pathspecs it leaves out. They belong after
+# {2} too, since a picked directory diffs its whole subtree — but fzf runs every
+# preview and execute through $SHELL, and zsh would try to glob a bare :!*.test.*
+# and fail the whole command. Quote each one for those strings; the header below
+# runs here in bash, where an unmatched glob is left alone.
+skipq=
+for pat in $DPICK_SKIP; do skipq="$skipq '$pat'"; done
+
 # {2} is the real path; --with-nth 1 hides it and shows the tree column only.
 # gitconfig sets delta's navigate, whose hunk-header box draws a stub of a second
 # vertical rule right beside the preview's own border; drop it here. The pager
 # keeps it — there it is the only border, and navigate is actually usable.
-diffprev="git diff $* -- {2} | delta $mode --24-bit-color=always --paging=never \
+diffprev="git diff $* -- {2}$skipq | delta $mode --24-bit-color=always --paging=never \
   --hunk-header-decoration-style=none --width=\$FZF_PREVIEW_COLUMNS $numflag"
 
 # _dtree's PR row carries a sentinel path rather than a real one: show that file,
@@ -58,7 +66,7 @@ docprev="fold -s -w \$FZF_PREVIEW_COLUMNS \"\$DPICK_DOC\" \
 none="echo 'No PR description.'"
 preview="if [ {2} = @pr ]; then [ -s \"\$DPICK_DOC\" ] && $docprev || $none; else $diffprev; fi"
 
-header=$(git diff --shortstat "$@" | awk '{
+header=$(git diff --shortstat "$@" -- $DPICK_SKIP | awk '{
   for (k = 1; k < NF; k++) {
     if ($(k+1) ~ /^insertion/) ins = $k
     if ($(k+1) ~ /^deletion/)  del = $k
@@ -71,6 +79,6 @@ _dtree "$@" |
       --header "$header" \
       --bind "resize:reload(_dtree $*)" \
       --preview "$preview" --preview-window 'right,75%,border-left' \
-      --bind "enter:execute(if [ {2} = @pr ]; then [ -s \"\$DPICK_DOC\" ] && fold -s -w \"\$(tput cols)\" \"\$DPICK_DOC\" | bat --color=always --style=plain --language=md --paging=always --pager 'less -R'; else git diff $* -- {2} | delta --paging=always $numflag; fi)" \
+      --bind "enter:execute(if [ {2} = @pr ]; then [ -s \"\$DPICK_DOC\" ] && fold -s -w \"\$(tput cols)\" \"\$DPICK_DOC\" | bat --color=always --style=plain --language=md --paging=always --pager 'less -R'; else git diff $* -- {2}$skipq | delta --paging=always $numflag; fi)" \
       --bind "ctrl-l:execute-silent([ -s $nums ] && : > $nums || printf %s '$off' > $nums)+refresh-preview" \
       "${open[@]}"
