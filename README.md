@@ -88,17 +88,17 @@ called directly. Symbol searches lean on the `src` and `tst` types defined in
 
 ## Git helpers
 
-| Command               | What it does                                     |
-| --------------------- | ------------------------------------------------ |
-| `git review`          | browse this branch's diff as a tree              |
-| `git review -w`       | the same for the uncommitted changes             |
-| `git review -c [SHA]` | one commit of the branch, picked if none given   |
-| `git review -v`       | include test files, which are skipped by default |
+| Command               | What it does                                          |
+| --------------------- | ----------------------------------------------------- |
+| `git review`          | browse this branch's diff as a tree                   |
+| `git review -w`       | the same for the uncommitted changes                  |
+| `git review -c [SHA]` | one commit of the branch, picked if none given        |
+| `git review -v`       | include the tests and locale files, hidden by default |
 
 `git review` is a `git-` prefixed script on `PATH`, which is all git needs to
-offer it as a subcommand. `_base`, `_dpick`, `_dtree` and `_tree` are the
-internals it builds on. The branch is compared against origin's default branch,
-not the local branch of the same name, which drifts behind.
+offer it as a subcommand. `_base`, `_dpick`, `_ddiff`, `_dstat`, `_dtree` and
+`_tree` are the internals it builds on. The branch is compared against origin's
+default branch, not the local branch of the same name, which drifts behind.
 
 Every mode opens a two-pane reviewer: the changed paths as a tree on the left,
 that path's diff through `delta` on the right. Single-child directories fold
@@ -110,8 +110,10 @@ is the way out. `ctrl-o` reads the picked file whole in `bat`: from the working
 tree, or as it was in that commit under `-c`. `ctrl-l` toggles delta's line
 numbers.
 
-`*.test.*`, `*.spec.*` and `*_test.go` are left out of the tree, the stat and
-every diff unless `-v` asks for them.
+Tests and translations are left out of the tree, the stat and every diff unless
+`-v` asks for them: `*.test.*`, `*.spec.*`, `*_test.go`, anything under a
+`locales/` directory and any `*translation*.json`. `ctrl-h` brings them back and
+hides them again without leaving the tree.
 
 The default mode also puts the PR's description in a row above the tree, fetched
 with `gh` in the background so a slow, unauthenticated or PR-less branch never

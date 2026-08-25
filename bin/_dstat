@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# The one-line stat above the tree: how many files are on show and their +/-.
+# The args are git-diff's revisions. Its own script so _dpick can hand it to
+# fzf's transform-header and re-run it when ctrl-h changes what is hidden.
+_ddiff --shortstat "$@" -- | awk '{
+  for (k = 1; k < NF; k++) {
+    if ($(k+1) ~ /^insertion/) ins = $k
+    if ($(k+1) ~ /^deletion/)  del = $k
+  }
+  printf "%s files  \033[32m+%d\033[0m \033[31m-%d\033[0m", $1, ins, del
+}'

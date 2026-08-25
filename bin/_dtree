@@ -16,14 +16,10 @@ width=0
 # preview's business, not this row's.
 [ -n "$DPICK_DOC" ] && printf '\033[1mPR description\033[0m\t@pr\n'
 
-# git-review's DPICK_SKIP holds pathspecs for the files it leaves out; unquoted,
-# so each is its own arg. Its patterns use git's :! rather than :(exclude) — the
-# parens would need quoting once this line is a string in fzf's reload.
-#
 # Sort on a key that marks each component 0 for a directory and 1 for a file, so
 # directories win every tie and a level's files collect below its subtrees rather
 # than scattering through them alphabetically. _tree prints the order it is given.
-git diff --numstat "$@" -- $DPICK_SKIP |
+_ddiff --numstat "$@" -- |
   awk -F'\t' '{
     n = split($3, c, "/"); k = ""
     for (i = 1; i <= n; i++) k = k ((i < n) ? "0" : "1") c[i] "/"

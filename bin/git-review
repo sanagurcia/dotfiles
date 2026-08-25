@@ -6,14 +6,19 @@
 #   (none)          this branch: _base...HEAD
 #   -w/--worktree   the uncommitted changes: git diff HEAD, staged and unstaged
 #   -c/--commit     one commit of the branch, picked if no SHA is given
-#   -v/--verbose    keep the test files, left out of every mode by default
+#   -v/--verbose    keep the tests and locale files, otherwise left out
 #
-# Tests are their own kind of reading and rarely why you opened the diff at all.
+# ctrl-h brings the hidden files back inside the tree, and hides them again.
+#
+# Neither kind is usually why you opened the diff: tests are their own reading,
+# and a translation file is a wall of strings a translator owns.
 
 # Pathspecs, so _dpick and _dtree can hand them straight to git diff. They live
 # here rather than there: which files are noise is this command's opinion, not
-# the viewer's.
-skip=':!*.test.* :!*.spec.* :!*_test.go'
+# the viewer's. Locale files all sit under a locales/ directory bar a stray or
+# two, which are camelCased — hence icase, and the second pattern.
+skip=':!*.test.* :!*.spec.* :!*_test.go
+      :(exclude,icase)*locales/*.json :(exclude,icase)*translation*.json'
 
 mode=branch sha=
 while [ $# -gt 0 ]; do

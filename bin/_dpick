@@ -6,6 +6,9 @@
 # browsed: -o takes it from the working tree, -r REV out of that revision. bat
 # infers the syntax from --file-name, since the blob arrives on a pipe unnamed.
 #
+# ctrl-h brings back whatever the caller asked to hide, and hides it again; ctrl-l
+# toggles delta's line numbers.
+#
 # Enter runs the pager through fzf's execute rather than accepting, so quitting it
 # returns to the tree instead of ending the interface. Esc is the way out.
 # git diff prints paths from the root of the working tree but resolves a pathspec
@@ -21,9 +24,18 @@ cd "$(git rev-parse --show-toplevel)" || exit
 # binding is its own shell.
 off="--line-numbers-left-format= --line-numbers-right-format="
 nums=$(mktemp -t dpick-nums) # holding $off: numbers off, empty: on
-trap 'rm -f "$nums"' EXIT
-: > "$nums"
 numflag="\$(cat $nums)"
+
+# git-review's DPICK_SKIP holds the pathspecs it leaves out. Same idea, one file
+# down: _ddiff and _dtree read the hidden set out of it on every call, so ctrl-h
+# can empty it and put it back — the whole interface then agrees on what is
+# hidden, tree, stat and diffs alike.
+hide=$(mktemp -t dpick-hide) # holding $DPICK_SKIP: hidden, empty: all shown
+export DPICK_HIDE=$hide
+trap 'rm -f "$nums" "$hide"' EXIT
+: > "$nums"
+printf %s "$DPICK_SKIP" > "$hide"
+show="[ -s $hide ] && : > $hide || printf %s \"\$DPICK_SKIP\" > $hide"
 
 open=()
 case $1 in
@@ -39,19 +51,11 @@ esac
 mode=--light
 [ "$(defaults read -g AppleInterfaceStyle 2>/dev/null)" = Dark ] && mode=--dark
 
-# git-review's DPICK_SKIP holds the pathspecs it leaves out. They belong after
-# {2} too, since a picked directory diffs its whole subtree — but fzf runs every
-# preview and execute through $SHELL, and zsh would try to glob a bare :!*.test.*
-# and fail the whole command. Quote each one for those strings; the header below
-# runs here in bash, where an unmatched glob is left alone.
-skipq=
-for pat in $DPICK_SKIP; do skipq="$skipq '$pat'"; done
-
 # {2} is the real path; --with-nth 1 hides it and shows the tree column only.
 # gitconfig sets delta's navigate, whose hunk-header box draws a stub of a second
 # vertical rule right beside the preview's own border; drop it here. The pager
 # keeps it — there it is the only border, and navigate is actually usable.
-diffprev="git diff $* -- {2}$skipq | delta $mode --24-bit-color=always --paging=never \
+diffprev="_ddiff $* -- {2} | delta $mode --24-bit-color=always --paging=never \
   --hunk-header-decoration-style=none --width=\$FZF_PREVIEW_COLUMNS $numflag"
 
 # _dtree's PR row carries a sentinel path rather than a real one: show that file,
@@ -66,19 +70,16 @@ docprev="fold -s -w \$FZF_PREVIEW_COLUMNS \"\$DPICK_DOC\" \
 none="echo 'No PR description.'"
 preview="if [ {2} = @pr ]; then [ -s \"\$DPICK_DOC\" ] && $docprev || $none; else $diffprev; fi"
 
-header=$(git diff --shortstat "$@" -- $DPICK_SKIP | awk '{
-  for (k = 1; k < NF; k++) {
-    if ($(k+1) ~ /^insertion/) ins = $k
-    if ($(k+1) ~ /^deletion/)  del = $k
-  }
-  printf "%s files  \033[32m+%d\033[0m \033[31m-%d\033[0m", $1, ins, del
-}')
+# The stat counts only what is on show, so ctrl-h has to redraw it too — hence
+# a script rather than a string, for transform-header to re-run.
+header=$(_dstat "$@")
 
 _dtree "$@" |
   fzf --ansi -d'\t' --with-nth 1 --layout=reverse --no-scrollbar --track \
       --header "$header" \
       --bind "resize:reload(_dtree $*)" \
       --preview "$preview" --preview-window 'right,75%,border-left' \
-      --bind "enter:execute(if [ {2} = @pr ]; then [ -s \"\$DPICK_DOC\" ] && fold -s -w \"\$(tput cols)\" \"\$DPICK_DOC\" | bat --color=always --style=plain --language=md --paging=always --pager 'less -R'; else git diff $* -- {2}$skipq | delta --paging=always $numflag; fi)" \
+      --bind "enter:execute(if [ {2} = @pr ]; then [ -s \"\$DPICK_DOC\" ] && fold -s -w \"\$(tput cols)\" \"\$DPICK_DOC\" | bat --color=always --style=plain --language=md --paging=always --pager 'less -R'; else _ddiff $* -- {2} | delta --paging=always $numflag; fi)" \
+      --bind "ctrl-h:execute-silent($show)+reload(_dtree $*)+refresh-preview+transform-header(_dstat $*)" \
       --bind "ctrl-l:execute-silent([ -s $nums ] && : > $nums || printf %s '$off' > $nums)+refresh-preview" \
       "${open[@]}"

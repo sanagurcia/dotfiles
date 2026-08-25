@@ -200,6 +200,33 @@ the next runs:
    skip without `SUPABASE_CONNECTION_STRING` — pass the local one, or they pass
    vacuously too.
 
+6. **React Doctor**, which comments on the PR and is entirely pre-emptable:
+
+   ```bash
+   pnpm doctor --scope changed --base origin/main
+   ```
+
+   `--scope changed` is what the bot reports: new issues versus the base, not the
+   repo's existing debt.
+
+   **Fix the errors. Leave the warnings alone.** `react-doctor.yml` runs the
+   action with no overrides, so it gates on `fail-on: error` — warnings are
+   advisory, appear in the comment, and block nothing. Do not pass
+   `--blocking warning`; it makes the run stricter than CI and turns advisory
+   notes into work nobody asked for. Mention a warning in passing if it is
+   telling you something true, and move on.
+
+   **Use `pnpm doctor`, never `node_modules/.bin/react-doctor`.** The root
+   `package.json` pins `react-doctor` to `^0.7.6` while CI runs latest, and the
+   older binary silently finds fewer issues — it missed two of six on the run
+   that prompted this. The `doctor` script is `npx react-doctor@latest` and
+   forwards flags, so it tracks CI without a repo change.
+
+   An error's fix is usually a real improvement — a compiler bailout, a component
+   built during render — rather than appeasement. `pnpm doctor why <file>:<line>`
+   explains one. If an error is genuinely wrong for the case, say why rather than
+   suppressing it silently.
+
 Fix everything that fails. A failure predating your branch is not yours: baseline
 it against `origin/main`, say so, move on.
 

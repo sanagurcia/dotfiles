@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# git diff with whatever git-review is currently hiding appended as pathspecs.
+# The args are git-diff's own, ending in `-- PATH` when one path is wanted.
+#
+# Its own script for two reasons: the hidden set lives in a file that ctrl-h
+# rewrites, so it has to be read at each call rather than baked into fzf's
+# command strings; and splitting it into one arg per pathspec has to happen in
+# bash, since fzf runs every preview and execute through $SHELL — zsh would hand
+# git the whole string as a single pathspec, and glob the ones with a * at that.
+exec git diff "$@" $(cat "$DPICK_HIDE" 2>/dev/null)
