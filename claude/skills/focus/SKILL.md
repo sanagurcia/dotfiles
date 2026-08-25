@@ -245,8 +245,16 @@ the next runs:
    tip reports an export this branch does not use but a commit landed since the
    fork does — a finding about being behind main, not about your change.
 
+**Run these one at a time.** `knip-diff-main`, and any baseline you take by
+checking out another commit, move the working tree — so anything running
+alongside them reads files from the wrong commit. A test suite caught mid-run
+that way fails on exactly the lines you added, which reads like a real
+regression and is not one. Background a check if it is slow, but never overlap
+it with something that checks out a different ref.
+
 Fix everything that fails. A failure predating your branch is not yours: baseline
-it against `origin/main`, say so, move on.
+it against `origin/main`, say so, move on — and take that baseline with the tree
+otherwise idle, for the same reason.
 
 **Whatever you fix here goes in its own commit**, on top of the series — never
 amended into the commits it belongs to. Those are pushed by the time anything
