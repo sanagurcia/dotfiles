@@ -227,6 +227,26 @@ the next runs:
    explains one. If an error is genuinely wrong for the case, say why rather than
    suppressing it silently.
 
+7. **Knip**, which also gates every PR and is also pre-emptable:
+
+   ```bash
+   knip-diff-main
+   ```
+
+   A bare `pnpm knip` proves nothing — `check-knip.yml` never gates on knip's
+   own exit code. It runs knip twice, on the head and on the **merge base**, and
+   fails only on findings the base did not already have. This repo has plenty of
+   pre-existing ones and none of them fail the check.
+
+   `knip-diff-main` reproduces that: two 7-second runs from the one checkout
+   (no second install — the same `node_modules` serves both while the lockfile
+   is unchanged), then the repo's own `.github/scripts/knip-diff.cjs`. It needs
+   a clean tree, because the base run checks out another commit.
+
+   **The base is the merge base, never the tip of main.** Diffing against the
+   tip reports an export this branch does not use but a commit landed since the
+   fork does — a finding about being behind main, not about your change.
+
 Fix everything that fails. A failure predating your branch is not yours: baseline
 it against `origin/main`, say so, move on.
 
@@ -246,8 +266,8 @@ Commits title, `Resolves <TICKET>`, exactly one core preview label —
 `preview:staging-full` if the diff touches `apps/api/**`, `apps/supabase/**` or
 the Ory/Hydra config.
 
-Push before `gh pr create`. You cannot record a screencast, so leave that
-section for the user and say so.
+Push before `gh pr create`. Leave the Screencast section empty and say nothing
+about it — the user records it or does not, and it is not yours to flag.
 
 ## Guardrails
 

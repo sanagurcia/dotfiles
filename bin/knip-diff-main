@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+# Reproduce CI's knip check locally, before opening a PR.
+#
+# `.github/workflows/check-knip.yml` does not gate on knip's own exit code — it
+# runs knip on the PR head and on the base, then fails only on issues the base
+# did not already have. So a bare `pnpm knip` tells you nothing useful: this
+# monorepo has plenty of pre-existing findings, and none of them fail the check.
+#
+# CI gets its two reports from two checkouts with two installs. That is not
+# needed locally: knip takes seconds, and when the lockfile is unchanged the
+# node_modules already here is valid for both sides, so the same checkout can
+# visit the base commit and come back.
+#
+# The base is the MERGE BASE, matching the workflow's own `MERGE_BASE` — not the
+# tip of main. Diffing against the tip invents findings: an export this branch
+# does not use, but a commit landed on main since the fork does, reads as newly
+# unused here. That is a report about being behind main, not about your change.
+#
+# Usage: knip-diff-main [branch-to-compare-against]   (default: origin/main)
+set -euo pipefail
+
+upstream="${1:-origin/main}"
+root="$(git rev-parse --show-toplevel)"
+cd "$root"
+
+diff_script=".github/scripts/knip-diff.cjs"
+[ -f "$diff_script" ] || { echo "no $diff_script — is this the autarc monorepo?" >&2; exit 2; }
+
+# The base run checks out another commit, so anything uncommitted would be
+# carried onto it or block the checkout outright.
+if [ -n "$(git status --porcelain)" ]; then
+  echo "working tree is dirty — commit or stash first" >&2
+  exit 2
+fi
+
+git fetch --quiet origin main 2>/dev/null || true
+
+base_ref="$(git merge-base "$upstream" HEAD)"
+
+# node_modules is installed for HEAD's lockfile. If the base wants a different
+# one, its report would describe dependencies that are not on disk.
+if ! git diff --quiet "$base_ref" HEAD -- pnpm-lock.yaml; then
+  echo "warning: pnpm-lock.yaml differs from the merge base, so the base report" >&2
+  echo "         approximate — dependency findings may be wrong. Source-level" >&2
+  echo "         findings (unused files and exports) are still meaningful." >&2
+fi
+
+start_ref="$(git symbolic-ref --quiet --short HEAD || git rev-parse HEAD)"
+tmp="$(mktemp -d)"
+# Always come back, including on a knip crash or a Ctrl-C mid-run.
+trap 'git checkout --quiet "$start_ref" 2>/dev/null || true; rm -rf "$tmp"' EXIT
+
+echo "knip: HEAD"
+pnpm -s knip --reporter json --no-exit-code > "$tmp/head.json"
+
+echo "knip: merge base $(git rev-parse --short "$base_ref")"
+git checkout --quiet --detach "$base_ref"
+pnpm -s knip --reporter json --no-exit-code > "$tmp/base.json"
+git checkout --quiet "$start_ref"
+
+node "$diff_script" "$tmp/base.json" "$tmp/head.json"
