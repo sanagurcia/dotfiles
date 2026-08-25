@@ -14,7 +14,7 @@ committed here reaches the other side with one command.
 | `zshrc`                | `~/.zshrc`                | zsh config (overlaid as `~/.zshrc.local` on Coder) |
 | `claude/settings.json` | `~/.claude/settings.json` | Claude Code user settings           |
 | `claude/CLAUDE.md`     | `~/.claude/CLAUDE.md`     | Claude Code user-level instructions |
-| `claude/skills/`       | `~/.claude/skills/`       | Claude Code user-level skills       |
+| `claude/skills/`       | `~/.claude/skills/`       | Claude Code user-level skills (`shared/` holds prose the skills cite, not a skill itself) |
 | `ripgreprc`            | `~/.ripgreprc`            | rg defaults, `src`/`tst` file types  |
 | `batconfig`            | `~/.config/bat/config`    | bat follows the macOS light/dark setting |
 | `bin/`                 | `~/.local/bin/`           | helper scripts (see below)           |
