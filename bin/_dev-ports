@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Print the ports of the named dev services, one per line, for this checkout.
+
+# The numbers live in exactly one place, tools/energy/internal/devenv/ports.go,
+# and a worktree offsets every base by its slot. So: prefer .worktree/ports.env
+# (WT_<NAME>_PORT, already offset) and fall back to PortTable's bases for an
+# unprovisioned checkout or the main one. Names are PortTable's, e.g. WEB,
+# API, API_V2, MCP.
+set -euo pipefail
+root=$(git rev-parse --show-toplevel)
+ports_env="$root/.worktree/ports.env"
+table="$root/tools/energy/internal/devenv/ports.go"
+
+for name in "$@"; do
+  if [ -f "$ports_env" ] && port=$(grep -m1 "^WT_${name}_PORT=" "$ports_env" 2>/dev/null); then
+    echo "${port#*=}"
+    continue
+  fi
+  # The PortTable literal is one `{"NAME", 1234},` per line.
+  port=$(sed -n "s/^[[:space:]]*{\"${name}\", \([0-9]*\)}.*/\1/p" "$table" | head -1)
+  [ -n "$port" ] || { echo "_dev-ports: no port named $name" >&2; exit 1; }
+  echo "$port"
+done

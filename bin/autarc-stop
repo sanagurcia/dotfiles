@@ -1,17 +1,43 @@
 #!/usr/bin/env bash
-# Tier 5: stop the dev servers autarc-dev started.
+# Tier 5: stop the dev servers autarc-dev started, in every branch's session.
 
 # Containers are left running — `pnpm services down` for those.
+#
+# Not just this branch's session: a session from a branch you have since left
+# keeps its servers — and its ports — alive, and its supervisors respawn
+# anything _free-ports kills. Only sessions named after a branch of this repo
+# are touched, so unrelated tmux sessions survive. `--mine` narrows it to HEAD.
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
 # Same session name energy launch derives: the branch, sanitized.
-session=$(git rev-parse --abbrev-ref HEAD | sed 's/[^A-Za-z0-9_-]/-/g')
-if tmux kill-session -t "$session" 2>/dev/null; then
-  echo "killed tmux session $session"
+sanitize() { sed 's/[^A-Za-z0-9_-]/-/g'; }
+
+if [ "${1:-}" = "--mine" ]; then
+  wanted=$(git rev-parse --abbrev-ref HEAD | sanitize)
 else
-  echo "no tmux session $session"
+  wanted=$(git for-each-ref --format='%(refname:short)' refs/heads | sanitize)
 fi
 
-_free-ports 5173 3000 8080   # web, api, api-v2; the worker has no port
+# Killing the session we are running in would take this script down with it.
+self=""
+if [ -n "${TMUX:-}" ]; then self=$(tmux display-message -p '#{session_name}' 2>/dev/null || true); fi
+
+killed=0
+for session in $(tmux list-sessions -F '#{session_name}' 2>/dev/null || true); do
+  grep -qxF "$session" <<<"$wanted" || continue
+  if [ "$session" = "$self" ]; then
+    echo "skipping $session — you are in it; run autarc-stop from outside tmux"
+    continue
+  fi
+  # Pane processes first: kill-session only signals each pane's foreground
+  # process, leaving the make → air → binary chain to rebuild and reclaim ports.
+  _kill-tree $(tmux list-panes -s -t "$session" -F '#{pane_pid}' 2>/dev/null || true)
+  tmux kill-session -t "$session" 2>/dev/null || true
+  echo "stopped $session"
+  killed=$((killed + 1))
+done
+[ "$killed" -gt 0 ] || echo "no dev tmux sessions"
+
+_free-ports $(_dev-ports WEB API API_V2 MCP)
 echo "✓ dev servers stopped (containers left up)"

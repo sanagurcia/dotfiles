@@ -1,13 +1,37 @@
 #!/usr/bin/env bash
-# Free the given TCP ports: SIGTERM what listens, SIGKILL what survives.
+# Free the given TCP ports: SIGTERM what listens, SIGKILL what survives, then
+# verify. Exits nonzero naming any port still held.
+
 # Needed because tmux kill-session only signals each pane's foreground process —
 # air's compiled binary and node's children outlive it, still holding the port.
+# Verification is the point: a live supervisor (air, nodemon, turbo) rebuilds and
+# relaunches its child within a second, so a kill that "succeeded" leaves the
+# port occupied by a brand-new pid. Kill the supervisor first; this is cleanup
+# for genuine orphans, and the failure message tells you when it wasn't enough.
+#
+# -sTCP:LISTEN is not optional: bare `lsof -i tcp:PORT` also matches processes
+# merely *connected* to the port, and killing those takes out innocent clients.
+set -uo pipefail
+
+stubborn=()
 for port in "$@"; do
-  pids=$(lsof -ti "tcp:$port" 2>/dev/null || true)
-  [ -n "$pids" ] || continue
-  echo "freeing :$port ($(echo $pids | tr '\n' ' '))"
-  kill $pids 2>/dev/null || true
-  sleep 1
-  pids=$(lsof -ti "tcp:$port" 2>/dev/null || true)
-  [ -n "$pids" ] && kill -9 $pids 2>/dev/null || true
+  for attempt in 1 2 3; do
+    pids=$(lsof -ti "tcp:$port" -sTCP:LISTEN 2>/dev/null || true)
+    [ -n "$pids" ] || break
+    echo "freeing :$port ($(echo $pids | tr '\n' ' '))"
+    if [ "$attempt" = 1 ]; then
+      kill $pids 2>/dev/null || true
+    else
+      kill -9 $pids 2>/dev/null || true
+    fi
+    sleep 1
+  done
+  pids=$(lsof -ti "tcp:$port" -sTCP:LISTEN 2>/dev/null || true)
+  [ -n "$pids" ] && stubborn+=("$port (pid $(echo $pids | tr '\n' ' '))")
 done
+
+if [ ${#stubborn[@]} -gt 0 ]; then
+  echo "✗ still held, something is respawning them:" >&2
+  printf '    :%s\n' "${stubborn[@]}" >&2
+  exit 1
+fi

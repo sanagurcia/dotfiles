@@ -6,8 +6,9 @@
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
-# Orphans from a previous run keep holding these, so never inherit them.
-_free-ports 5173 3000 8080
+# Orphans from a previous run keep holding these, so never inherit them. A
+# failure here means a live supervisor is respawning them: autarc-stop.
+_free-ports $(_dev-ports WEB API API_V2 MCP)
 
 if [ $# -gt 0 ]; then
   pnpm energy launch --no-agent "$@"

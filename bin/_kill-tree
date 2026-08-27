@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# SIGTERM a pid and every descendant, deepest first, then SIGKILL the survivors.
+
+# Killing a pane's foreground process is not enough to stop a dev server: the
+# chain is make → sh → air → the compiled binary, and every link is a supervisor
+# that restarts what died below it, so the whole tree has to be signalled in one
+# pass — a child killed alone is simply rebuilt by its parent.
+set -uo pipefail
+
+descendants() { # pid -> all descendants then the pid itself, deepest first
+  local pid=$1 child
+  for child in $(pgrep -P "$pid" 2>/dev/null || true); do
+    descendants "$child"
+  done
+  echo "$pid"
+}
+
+tree=""
+for root in "$@"; do
+  kill -0 "$root" 2>/dev/null || continue
+  tree+="$(descendants "$root")"$'\n'
+done
+tree=$(echo "$tree" | grep -E '^[0-9]+$' || true)
+[ -n "$tree" ] || exit 0
+
+kill $tree 2>/dev/null || true
+sleep 1
+survivors=$(for p in $tree; do kill -0 "$p" 2>/dev/null && echo "$p"; done)
+[ -n "$survivors" ] && kill -9 $survivors 2>/dev/null || true
+exit 0
