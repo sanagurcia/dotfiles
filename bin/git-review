@@ -60,7 +60,7 @@ fi
 # gh is a network call: it can be slow, unauthenticated, or on a branch with no
 # PR at all. Let it run alongside the tree rather than in front of it — the file
 # fills in whenever it fills in, and staying empty is one of the answers.
-doc=$(mktemp -t review-pr)
+doc=$(mktemp -t review-pr.XXXXXX)
 trap 'rm -f "$doc"' EXIT
 
 # Only the description is worth reading here: everything from the release notes

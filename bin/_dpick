@@ -23,14 +23,14 @@ cd "$(git rev-parse --show-toplevel)" || exit
 # formats blanked. The state is a file because every preview and every execute
 # binding is its own shell.
 off="--line-numbers-left-format= --line-numbers-right-format="
-nums=$(mktemp -t dpick-nums) # holding $off: numbers off, empty: on
+nums=$(mktemp -t dpick-nums.XXXXXX) # holding $off: numbers off, empty: on
 numflag="\$(cat $nums)"
 
 # git-review's DPICK_SKIP holds the pathspecs it leaves out. Same idea, one file
 # down: _ddiff and _dtree read the hidden set out of it on every call, so ctrl-h
 # can empty it and put it back — the whole interface then agrees on what is
 # hidden, tree, stat and diffs alike.
-hide=$(mktemp -t dpick-hide) # holding $DPICK_SKIP: hidden, empty: all shown
+hide=$(mktemp -t dpick-hide.XXXXXX) # holding $DPICK_SKIP: hidden, empty: all shown
 export DPICK_HIDE=$hide
 trap 'rm -f "$nums" "$hide"' EXIT
 : > "$nums"
