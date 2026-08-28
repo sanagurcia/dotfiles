@@ -62,17 +62,17 @@ fi
 diffprev="_ddiff $* -- {2} | delta $mode --24-bit-color=always --paging=never \
   --hunk-header-decoration-style=none --width=\$FZF_PREVIEW_COLUMNS $numflag"
 
-# _dtree's PR row carries a sentinel path rather than a real one: show that file,
-# not a diff of it. An empty one is gh having found no PR, or not reached GitHub.
+# _dtree's PR row carries a sentinel path rather than a real one: show the
+# description, not a diff of it. _prdoc fetches on demand and says so itself when
+# there is no PR, so there is nothing to test for here.
 #
 # bat's wrap=auto is never when its output is a pipe, and a description is prose
 # that runs well past the pane — so fold it first, at spaces rather than mid-word
 # as bat and less both would. The width comes from whoever has one: fzf's pane
 # for the preview, the terminal for the pager.
-docprev="fold -s -w \$FZF_PREVIEW_COLUMNS \"\$DPICK_DOC\" \
+docprev="_prdoc | fold -s -w \$FZF_PREVIEW_COLUMNS \
   | bat --color=always --style=plain --language=md --paging=never"
-none="echo 'No PR description.'"
-preview="if [ {2} = @pr ]; then [ -s \"\$DPICK_DOC\" ] && $docprev || $none; else $diffprev; fi"
+preview="if [ {2} = @pr ]; then $docprev; else $diffprev; fi"
 
 # The stat counts only what is on show, so ctrl-h has to redraw it too — hence
 # a script rather than a string, for transform-header to re-run.
@@ -83,7 +83,7 @@ _dtree "$@" |
       --header "$header" \
       --bind "resize:reload(_dtree $*)" \
       --preview "$preview" --preview-window 'right,75%,border-left' \
-      --bind "enter:execute(if [ {2} = @pr ]; then [ -s \"\$DPICK_DOC\" ] && fold -s -w \"\$(tput cols)\" \"\$DPICK_DOC\" | bat --color=always --style=plain --language=md --paging=always --pager 'less -R'; else _ddiff $* -- {2} | delta $mode --paging=always $numflag; fi)" \
+      --bind "enter:execute(if [ {2} = @pr ]; then _prdoc | fold -s -w \"\$(tput cols)\" | bat --color=always --style=plain --language=md --paging=always --pager 'less -R'; else _ddiff $* -- {2} | delta $mode --paging=always $numflag; fi)" \
       --bind "ctrl-h:execute-silent($show)+reload(_dtree $*)+refresh-preview+transform-header(_dstat $*)" \
       --bind "ctrl-l:execute-silent([ -s $nums ] && : > $nums || printf %s '$off' > $nums)+refresh-preview" \
       "${open[@]}"

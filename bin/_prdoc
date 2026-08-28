@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# Print the PR's description, fetching it if git-review's prefetch has not landed
+# yet. The preview and the pager both read through here, so an empty cache means
+# "fetch now" rather than "there is nothing" — otherwise the first preview, drawn
+# before gh has answered, sticks as "No PR description." until the row is left
+# and re-entered.
+#
+# DPICK_DOC is the cache file. .done marks the fetch as attempted, so a PR-less
+# branch is not re-fetched on every render; .lock keeps two callers (the
+# prefetch and a preview) from both calling gh — the loser waits for the winner.
+doc=${DPICK_DOC:?_prdoc: DPICK_DOC is not set}
+
+if [ ! -e "$doc.done" ]; then
+  if mkdir "$doc.lock" 2>/dev/null; then
+    # On the coder workspace gh is authenticated by a shell function that fetches
+    # a token per call — which a script never sees, so gh here came up logged out
+    # and the description was always empty. Fetch the token ourselves, and only
+    # when actually fetching: the call costs most of a second. Off coder ($CODER
+    # unset, i.e. the Mac) gh has its own login and this is skipped.
+    if [ -z "${GH_TOKEN:-}${GITHUB_TOKEN:-}" ] && [ -n "${CODER:-}" ]; then
+      GH_TOKEN=$(coder external-auth access-token "${GH_EXTERNAL_AUTH_PROVIDER:-primary-github}" 2>/dev/null)
+      export GH_TOKEN
+    fi
+
+    # Only the description is worth reading here: everything from the release
+    # notes heading down is generated summary, so cut at that heading — any
+    # level, any case — and drop the blank lines left hanging off the end.
+    # GitHub's bodies come back with CRLF endings; the pager has no use for the
+    # CR. gh is a network call and can be slow, unauthenticated, or on a branch
+    # with no PR at all: an empty file is one of the answers.
+    gh pr view --json number,title,body \
+       --template '{{printf "# #%v %v\n\n%v" .number .title .body}}' 2>/dev/null |
+      awk '{ sub(/\r$/, "") }
+           tolower($0) ~ /^#+[[:space:]]*release note/ { exit }
+           /^[[:space:]]*$/ { blanks++; next }
+           { while (blanks-- > 0) print ""; blanks = 0; print }' >"$doc"
+    : >"$doc.done"
+    rmdir "$doc.lock"
+  else
+    # Someone else is fetching. Ten seconds is far longer than gh takes, and
+    # giving up prints the fallback rather than hanging the preview.
+    for _ in $(seq 100); do [ -e "$doc.done" ] && break; sleep 0.1; done
+  fi
+fi
+
+[ -s "$doc" ] && cat "$doc" || echo "No PR description."
