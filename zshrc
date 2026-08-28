@@ -47,6 +47,16 @@ export RIPGREP_CONFIG_PATH="$HOME/.ripgreprc"
 export AUTARC="postgresql://postgres@127.0.0.1:54322/postgres"
 export CLICOLOR=1
 
+# bat's auto:system follows the macOS light/dark setting and keeps working in an
+# fzf preview, where stdout is redirected and terminal detection cannot run. It
+# is macOS-only and warns into the preview pane anywhere else, so off the Mac
+# pick dark outright — as _dpick does for delta.
+if [[ $OSTYPE == darwin* ]]; then
+  export BAT_THEME=auto:system
+else
+  export BAT_THEME=dark
+fi
+
 # Put the default alias's node on PATH without sourcing nvm's 4.8k lines (210ms);
 # nvm itself loads on first use, so `nvm use` still works. Mac only — the Coder
 # image has no nvm and brings its own node.

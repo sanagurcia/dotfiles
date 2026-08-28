@@ -1,5 +1,5 @@
-# Follow the macOS light/dark setting, even when piped (e.g. the fzf preview).
---theme=auto:system
+# The theme is BAT_THEME in zshrc: auto:system is macOS-only and warns loudly
+# everywhere else, straight into the fzf preview pane.
 
 # Expand tabs to two columns. bat does this itself only on a terminal; piped into
 # a pager (_bat-at, the fzf previews) the raw tabs reach less, which stops every
