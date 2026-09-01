@@ -7,11 +7,12 @@
 #
 # cur and deep are the two files ft keeps its state in; a reload runs in its own
 # shell and cannot see them otherwise. A hop always lands shallow, so it empties
-# deep and puts the prompt back.
+# deep and puts the prompt back. It clears the query too: a filter for the level
+# we are leaving has no business narrowing the one we land on.
 p=$1; cur=$2; deep=$3
 if [ -d "$p" ]; then
   printf %s "${p%/}" > "$cur"; : > "$deep"
-  printf 'reload(_ftree %q)+pos(1)+change-header(%s)+change-prompt(> )' "$p" "${p%/}"
+  printf 'reload(_ftree %q)+clear-query+pos(1)+change-header(%s)+change-prompt(> )' "$p" "${p%/}"
 else
   printf 'execute(_bat-at %q)' "$p"
 fi
