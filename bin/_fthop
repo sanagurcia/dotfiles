@@ -1,12 +1,17 @@
 #!/usr/bin/env bash
 # ft's Enter action, printed for fzf to run through transform: page a file in
-# bat, or hop the tree into a directory — reloading _ftree there and moving the
-# header to match. Its own script so the bind string stays a bare transform(...)
-# call, free of the nested parens and quotes fzf's action parser trips over when
-# the whole thing is spelled inline.
-p=$1
+# bat, or hop the tree into a directory — recording the new root and resetting to
+# the shallow view, then reloading _ftree there. Its own script so the bind stays
+# a bare transform(...) call, free of the nested parens and quotes fzf's action
+# parser trips over when the whole thing is spelled inline.
+#
+# cur and deep are the two files ft keeps its state in; a reload runs in its own
+# shell and cannot see them otherwise. A hop always lands shallow, so it empties
+# deep and puts the prompt back.
+p=$1; cur=$2; deep=$3
 if [ -d "$p" ]; then
-  printf 'reload(_ftree %q)+pos(1)+change-header(%s)' "$p" "${p%/}"
+  printf %s "${p%/}" > "$cur"; : > "$deep"
+  printf 'reload(_ftree %q)+pos(1)+change-header(%s)+change-prompt(> )' "$p" "${p%/}"
 else
   printf 'execute(_bat-at %q)' "$p"
 fi

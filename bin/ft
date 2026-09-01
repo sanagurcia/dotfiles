@@ -1,12 +1,18 @@
 #!/usr/bin/env bash
-# Browse the repo as a folded tree: directories and files on the left, the file
-# itself in bat on the right. With DIR, root the tree there rather than at the
-# repo top; zoom in by opening a directory, out through the ../ row. Enter pages
-# a file and returns to the tree on quit — Esc is the way out.
+# Browse a directory: its immediate children on the left, the file itself in bat
+# on the right. With DIR, start there rather than at the repo top; zoom in by
+# opening a directory, out through the ../ row. Enter pages a file and returns to
+# the list on quit — Esc is the way out.
 #
-# fd's paths are root-relative and a hop reloads _ftree against them, so cd to
-# the root once and let the children inherit it. A DIR argument is resolved
-# first, since it is relative to wherever ft was called, not to the root.
+# The list is one level deep by default, so a typed query matches only the dir
+# you are in. ctrl-g flips the current dir to a deep view — its whole subtree as a
+# folded tree — for a global search across everything under it, and back. fzf
+# searches what it shows, so scoping the search means scoping the list; the prompt
+# says which view is on.
+#
+# fd's paths are root-relative and a hop reloads _ftree against them, so cd to the
+# root once and let the children inherit it. A DIR argument is resolved first,
+# since it is relative to wherever ft was called, not to the root.
 root=$(git rev-parse --show-toplevel 2>/dev/null) || root=$PWD
 if [ -n "$1" ]; then
   abs=$(cd "$1" 2>/dev/null && pwd) || { echo "ft: no such directory: $1" >&2; exit 1; }
@@ -18,13 +24,21 @@ else
   dir=.
 fi
 
+# State a reload cannot reach through ft's variables: cur holds the current root,
+# deep is empty for the shallow view and non-empty for the deep one. _fthop and
+# _ftg read and rewrite them; here they just start shallow at dir.
+cur=$(mktemp -t ft-cur.XXXXXX); deep=$(mktemp -t ft-deep.XXXXXX)
+trap 'rm -f "$cur" "$deep"' EXIT
+printf %s "$dir" > "$cur"; : > "$deep"
+
 # A directory previews as its own listing, a file as itself.
 preview='if [ -d {2} ]; then _flist {2} | cut -f1; else _bat-at {2}; fi'
 
-# Enter pages a file, or hops the tree into a directory. _fthop prints the action
-# fzf's transform then runs — see it for why that logic is a script, not inline.
+# _fthop and _ftg print the actions fzf's transform then runs — see them for why
+# that logic is a script, not spelled inline.
 _ftree "$dir" |
   fzf --ansi -d'\t' --with-nth 1 --layout=reverse --no-scrollbar \
       --header "$dir" \
       --preview "$preview" --preview-window 'right,75%,border-left' \
-      --bind "enter:transform(_fthop {2})"
+      --bind "enter:transform(_fthop {2} $cur $deep)" \
+      --bind "ctrl-g:transform(_ftg $cur $deep)"

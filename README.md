@@ -80,20 +80,25 @@ first.
 | `fs`    | find a symbol's usages, pick one, view it                      |
 | `defs`  | pick a declaration site interactively                          |
 | `refs`  | which apps/packages a symbol appears in, plus total files      |
-| `ft`    | browse the repo as a folded tree, `ft DIR` to root at a subtree |
+| `ft`    | browse a directory a level at a time, `ctrl-g` for a global tree search, `ft DIR` to start at a subtree |
 | `scripts` | list these commands                                          |
 
 `_defs`, `_pick` and `_bat-at` are internals these build on, not meant to be
 called directly. Symbol searches lean on the `src` and `tst` types defined in
 `ripgreprc`, so they skip tests by default.
 
-`ft` is the filesystem cousin of `git review`: the same `_tree` renderer, fed
-by `fd` instead of a diff, so single-child directories fold into one row and
-directories sort ahead of files. The tree is on the left, the file in `bat` on
-the right. Opening a directory re-roots the tree into it and the `../` row
-climbs back out, which is how you work from a portion of the tree; Enter pages a
-file and returns on quit, Esc leaves. `_ftree` is its feeder and `_fthop` prints
-Enter's action.
+`ft` browses a directory one level at a time — its immediate children on the
+left, the file in `bat` on the right. Opening a directory zooms into it and the
+`../` row climbs back out, which is how you work from a portion of the tree;
+Enter pages a file and returns on quit, Esc leaves.
+
+The list shows a single level so a typed query only matches what you can see,
+right there. `ctrl-g` flips the current directory to a deep view — its whole
+subtree as a folded tree, rendered by `git review`'s `_tree` — for a global
+search across everything under it, and back; the prompt says which view is on.
+(fzf searches what it shows, so scoping the search means scoping the list — a
+full tree that still matched only the top level is not something fzf can do.)
+`_ftree` is the feeder, `_fthop` and `_ftg` print the Enter and `ctrl-g` actions.
 
 ## Git helpers
 

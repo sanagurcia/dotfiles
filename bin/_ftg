@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# ctrl-g's action for ft, printed for fzf's transform: flip the current root
+# between the shallow view (this level only, so a query matches just here) and the
+# deep view (the whole subtree as a tree, for a global search). The prompt shows
+# which is on.
+#
+# The root and the mode live in the two files ft keeps — cur holds the root, deep
+# is empty for shallow and non-empty for deep — since a reload runs in its own
+# shell and cannot see ft's variables.
+cur=$1; deep=$2
+if [ -s "$deep" ]; then : > "$deep"; else printf x > "$deep"; fi
+d=$(cat "$cur")
+if [ -s "$deep" ]; then
+  printf 'reload(_ftree %q deep)+change-prompt(global> )' "$d"
+else
+  printf 'reload(_ftree %q)+change-prompt(> )' "$d"
+fi
