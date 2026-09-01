@@ -21,15 +21,10 @@ fi
 # A directory previews as its own listing, a file as itself.
 preview='if [ -d {2} ]; then _flist {2} | cut -f1; else _bat-at {2}; fi'
 
-# Enter pages a file, or hops into a directory — reloading the tree rooted there
-# and moving the header to match. fzf quotes {2} before the shell sees it, so $d
-# carries the bare path on into the actions the transform prints.
-hop='if [ -d {2} ]; then d={2}
-       echo "reload(_ftree \"$d\")+pos(1)+change-header($d)"
-     else echo "execute(_bat-at {2})"; fi'
-
+# Enter pages a file, or hops the tree into a directory. _fthop prints the action
+# fzf's transform then runs — see it for why that logic is a script, not inline.
 _ftree "$dir" |
   fzf --ansi -d'\t' --with-nth 1 --layout=reverse --no-scrollbar \
       --header "$dir" \
       --preview "$preview" --preview-window 'right,75%,border-left' \
-      --bind "enter:transform($hop)"
+      --bind "enter:transform(_fthop {2})"

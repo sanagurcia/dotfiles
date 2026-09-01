@@ -92,7 +92,8 @@ by `fd` instead of a diff, so single-child directories fold into one row and
 directories sort ahead of files. The tree is on the left, the file in `bat` on
 the right. Opening a directory re-roots the tree into it and the `../` row
 climbs back out, which is how you work from a portion of the tree; Enter pages a
-file and returns on quit, Esc leaves. `_ftree` is its feeder.
+file and returns on quit, Esc leaves. `_ftree` is its feeder and `_fthop` prints
+Enter's action.
 
 ## Git helpers
 
