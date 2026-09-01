@@ -88,9 +88,10 @@ called directly. Symbol searches lean on the `src` and `tst` types defined in
 `ripgreprc`, so they skip tests by default.
 
 `ft` browses a directory one level at a time — its immediate children on the
-left, the file in `bat` on the right. Opening a directory zooms into it and the
-`../` row climbs back out, which is how you work from a portion of the tree;
-Enter pages a file and returns on quit, Esc leaves.
+left, the file in `bat` on the right. Opening a directory zooms into it, its
+`../` row climbs back out, and a typed filter clears on the way in — that is how
+you work from a portion of the tree; Enter pages a file and returns on quit, Esc
+leaves.
 
 The list shows a single level so a typed query only matches what you can see,
 right there. `ctrl-g` flips the current directory to a deep view — its whole
