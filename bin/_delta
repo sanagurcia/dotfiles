@@ -1,0 +1,24 @@
+#!/bin/sh
+# delta, told which background it is up against. Wraps every call: gitconfig's
+# pager and diffFilter, and _dpick's previews and pager.
+#
+# Two reasons the plain binary will not do.
+#
+# delta reads BAT_THEME for syntax highlighting, and the one zshrc exports for
+# bat — auto:system — is newer than the bat delta bundles. delta warns, then
+# falls back to its own default theme, which is a dark one. So a light diff came
+# out with light backgrounds and Monokai's near-white code on top. Unset it and
+# delta picks the theme from the mode itself: GitHub when light, Monokai when
+# dark. That is the mapping we want, so there is no theme name to name here.
+#
+# And delta cannot always work out the background for itself: inside tmux its
+# OSC 11 query cannot get out, and in an fzf preview stdout is redirected. So
+# say which it is, the same way batconfig's auto:system does for bat — the macOS
+# setting, and off the Mac (the Coder workspace) dark.
+mode=--dark
+if command -v defaults >/dev/null &&
+   [ "$(defaults read -g AppleInterfaceStyle 2>/dev/null)" != Dark ]; then
+  mode=--light
+fi
+
+exec env -u BAT_THEME delta $mode "$@"

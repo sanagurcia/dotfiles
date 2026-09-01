@@ -44,22 +44,11 @@ case $1 in
       open=(--bind "ctrl-o:execute([ {2} = @pr ] || git show $rev:{2} | bat --color=always --file-name {2} --paging=always --pager \"less -R\")") ;;
 esac
 
-# delta cannot work out the background for itself here: stdout is redirected in
-# an fzf preview, and inside tmux its OSC 11 query cannot get out either. So say
-# which it is. macOS follows the system setting, as batconfig's auto:system does
-# for bat; elsewhere — the coder workspace — dark.
-if command -v defaults >/dev/null; then
-  mode=--light
-  [ "$(defaults read -g AppleInterfaceStyle 2>/dev/null)" = Dark ] && mode=--dark
-else
-  mode=--dark
-fi
-
 # {2} is the real path; --with-nth 1 hides it and shows the tree column only.
 # gitconfig sets delta's navigate, whose hunk-header box draws a stub of a second
 # vertical rule right beside the preview's own border; drop it here. The pager
 # keeps it — there it is the only border, and navigate is actually usable.
-diffprev="_ddiff $* -- {2} | delta $mode --24-bit-color=always --paging=never \
+diffprev="_ddiff $* -- {2} | _delta --24-bit-color=always --paging=never \
   --hunk-header-decoration-style=none --width=\$FZF_PREVIEW_COLUMNS $numflag"
 
 # _dtree's PR row carries a sentinel path rather than a real one: show the
@@ -83,7 +72,7 @@ _dtree "$@" |
       --header "$header" \
       --bind "resize:reload(_dtree $*)" \
       --preview "$preview" --preview-window 'right,75%,border-left' \
-      --bind "enter:execute(if [ {2} = @pr ]; then _prdoc | fold -s -w \"\$(tput cols)\" | bat --color=always --style=plain --language=md --paging=always --pager 'less -R'; else _ddiff $* -- {2} | delta $mode --paging=always $numflag; fi)" \
+      --bind "enter:execute(if [ {2} = @pr ]; then _prdoc | fold -s -w \"\$(tput cols)\" | bat --color=always --style=plain --language=md --paging=always --pager 'less -R'; else _ddiff $* -- {2} | _delta --paging=always $numflag; fi)" \
       --bind "ctrl-h:execute-silent($show)+reload(_dtree $*)+refresh-preview+transform-header(_dstat $*)" \
       --bind "ctrl-l:execute-silent([ -s $nums ] && : > $nums || printf %s '$off' > $nums)+refresh-preview" \
       "${open[@]}"

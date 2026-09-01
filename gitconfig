@@ -23,11 +23,13 @@
 	ff = only
 
 [core]
-	pager = delta
+	# _delta, not delta: the wrapper says which background it is against, and
+	# keeps BAT_THEME off it. See bin/_delta.
+	pager = _delta
 	editor = nano
 
 [interactive]
-	diffFilter = delta --color-only
+	diffFilter = _delta --color-only
 
 [delta]
 	navigate = true

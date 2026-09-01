@@ -1,5 +1,6 @@
 # The theme is BAT_THEME in zshrc: auto:system is macOS-only and warns loudly
-# everywhere else, straight into the fzf preview pane.
+# everywhere else, straight into the fzf preview pane. delta reads BAT_THEME too
+# and is older than auto:system, so bin/_delta keeps it away from delta.
 
 # Expand tabs to two columns. bat does this itself only on a terminal; piped into
 # a pager (_bat-at, the fzf previews) the raw tabs reach less, which stops every

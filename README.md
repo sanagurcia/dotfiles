@@ -8,7 +8,7 @@ committed here reaches the other side with one command.
 
 | Repo file              | Symlinked to              | What it configures                  |
 | ---------------------- | ------------------------- | ----------------------------------- |
-| `gitconfig`            | `~/.gitconfig`            | identity, aliases, delta as pager   |
+| `gitconfig`            | `~/.gitconfig`            | identity, aliases, `_delta` as pager |
 | `nanorc`               | `~/.nanorc`               | less-style navigation in nano       |
 | `tmux.conf`            | `~/.tmux.conf`            | Ctrl+Space prefix                   |
 | `zshrc`                | `~/.zshrc`                | zsh config (overlaid as `~/.zshrc.local` on Coder) |
@@ -112,8 +112,8 @@ full tree that still matched only the top level is not something fzf can do.)
 | `git sweep`           | delete every local branch and worktree except main    |
 
 `git review` is a `git-` prefixed script on `PATH`, which is all git needs to
-offer it as a subcommand. `_base`, `_dpick`, `_ddiff`, `_dstat`, `_dtree` and
-`_tree` are the internals it builds on; `_tree` is shared with `ft`, and passes
+offer it as a subcommand. `_base`, `_dpick`, `_ddiff`, `_dstat`, `_dtree`,
+`_delta` and `_tree` are the internals it builds on; `_tree` is shared with `ft`, and passes
 `-v counts=1` here to turn on the `+/-` column a plain file tree leaves off. The branch is compared against origin's
 default branch, not the local branch of the same name, which drifts behind.
 
@@ -169,6 +169,14 @@ palette indices, and the terminal decides what those look like. iTerm2's stock
 palette is pastel, which on a white background leaves directories and diffs too
 light to read.
 
+delta is the exception: it draws its diff backgrounds and syntax colours in
+24-bit, so it has to know which background it is against. `bin/_delta` wraps
+every call — gitconfig's pager and diffFilter, `git review`'s previews — and
+tells it, from the macOS setting on the Mac and dark off it. It also unsets
+`BAT_THEME` first: delta reads that for syntax highlighting, and the
+`auto:system` zshrc exports for bat is newer than the bat delta bundles, so
+delta fell back to a dark theme even when told `--light`.
+
 `iterm2-white.itermcolors` is a palette for that background: the six hues at
 full saturation, each dark enough for 6:1 contrast, and the bright variants at
 4:5:1 rather than lighter still. Import it under iTerm2 → Settings → Profiles →
@@ -181,9 +189,9 @@ text on a coloured background will look wrong — nothing I use does.
 
 ## Prerequisites
 
-`gitconfig` sets `core.pager = delta` and `core.editor = nano`, so install both
-before linking or git will fail to page and `git commit` will open the wrong
-editor.
+`gitconfig` pages through `bin/_delta`, a wrapper around `delta`, and sets
+`core.editor = nano`, so install both before linking or git will fail to page and
+`git commit` will open the wrong editor.
 
 In a Coder workspace, `setup.sh` installs nano, bat and fd for you — see
 [Workspace rebuilds](#workspace-rebuilds). The rest are manual, on both systems.
