@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# Browse the repo as a folded tree: directories and files on the left, the file
+# itself in bat on the right. With DIR, root the tree there rather than at the
+# repo top; zoom in by opening a directory, out through the ../ row. Enter pages
+# a file and returns to the tree on quit — Esc is the way out.
+#
+# fd's paths are root-relative and a hop reloads _ftree against them, so cd to
+# the root once and let the children inherit it. A DIR argument is resolved
+# first, since it is relative to wherever ft was called, not to the root.
+root=$(git rev-parse --show-toplevel 2>/dev/null) || root=$PWD
+if [ -n "$1" ]; then
+  abs=$(cd "$1" 2>/dev/null && pwd) || { echo "ft: no such directory: $1" >&2; exit 1; }
+  cd "$root" || exit
+  dir=${abs#"${root%/}"/}
+  [ "$dir" = "$abs" ] && dir=.   # the argument was the root itself
+else
+  cd "$root" || exit
+  dir=.
+fi
+
+# A directory previews as its own listing, a file as itself.
+preview='if [ -d {2} ]; then _flist {2} | cut -f1; else _bat-at {2}; fi'
+
+# Enter pages a file, or hops into a directory — reloading the tree rooted there
+# and moving the header to match. fzf quotes {2} before the shell sees it, so $d
+# carries the bare path on into the actions the transform prints.
+hop='if [ -d {2} ]; then d={2}
+       echo "reload(_ftree \"$d\")+pos(1)+change-header($d)"
+     else echo "execute(_bat-at {2})"; fi'
+
+_ftree "$dir" |
+  fzf --ansi -d'\t' --with-nth 1 --layout=reverse --no-scrollbar \
+      --header "$dir" \
+      --preview "$preview" --preview-window 'right,75%,border-left' \
+      --bind "enter:transform($hop)"

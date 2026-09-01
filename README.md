@@ -80,11 +80,19 @@ first.
 | `fs`    | find a symbol's usages, pick one, view it                      |
 | `defs`  | pick a declaration site interactively                          |
 | `refs`  | which apps/packages a symbol appears in, plus total files      |
+| `ft`    | browse the repo as a folded tree, `ft DIR` to root at a subtree |
 | `scripts` | list these commands                                          |
 
 `_defs`, `_pick` and `_bat-at` are internals these build on, not meant to be
 called directly. Symbol searches lean on the `src` and `tst` types defined in
 `ripgreprc`, so they skip tests by default.
+
+`ft` is the filesystem cousin of `git review`: the same `_tree` renderer, fed
+by `fd` instead of a diff, so single-child directories fold into one row and
+directories sort ahead of files. The tree is on the left, the file in `bat` on
+the right. Opening a directory re-roots the tree into it and the `../` row
+climbs back out, which is how you work from a portion of the tree; Enter pages a
+file and returns on quit, Esc leaves. `_ftree` is its feeder.
 
 ## Git helpers
 
@@ -98,7 +106,8 @@ called directly. Symbol searches lean on the `src` and `tst` types defined in
 
 `git review` is a `git-` prefixed script on `PATH`, which is all git needs to
 offer it as a subcommand. `_base`, `_dpick`, `_ddiff`, `_dstat`, `_dtree` and
-`_tree` are the internals it builds on. The branch is compared against origin's
+`_tree` are the internals it builds on; `_tree` is shared with `ft`, and passes
+`-v counts=1` here to turn on the `+/-` column a plain file tree leaves off. The branch is compared against origin's
 default branch, not the local branch of the same name, which drifts behind.
 
 Every mode opens a two-pane reviewer: the changed paths as a tree on the left,

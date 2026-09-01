@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# One filesystem subtree as "display<TAB>path" rows for ft's list pane, folded
+# and sized the way _dtree does it for a diff — the same _tree renderer, only
+# without the count column. Its own script so ft can hand it to fzf's reload and
+# re-run it on a hop.
+#
+# fd rather than a glob, so .gitignore is honoured: a directory reads as its
+# sources and not its build output. Paths are root-relative; ft cd's to the root
+# first, so a reload lands there too. A directory row's path carries a trailing
+# slash, so dirname climbs past it to the real parent.
+dir=${1:-.}; dir=${dir#./}; [ -z "$dir" ] && dir=.
+
+# Same width maths as _dtree: FZF_COLUMNS inside fzf, the tty outside it, 0 when
+# neither answers so _tree lays out against its own content instead of a guess.
+cols=${FZF_COLUMNS:-$( { stty size </dev/tty; } 2>/dev/null | awk '{print $2}' )}
+width=0
+[ -n "$cols" ] && width=$(( cols - cols * 75 / 100 - 3 ))
+
+# A row to climb out of the current root, unless it already is the top.
+[ "$dir" = . ] || printf '\033[34m../\033[0m\t%s\n' "$(dirname "${dir%/}")"
+
+# Sort on a key that marks each component 0 for a directory and 1 for a file, so
+# directories win every tie and a level's files collect below its subtrees rather
+# than scattering through them. Same trick _dtree uses; _tree prints what it gets.
+fd -t f . "$dir" | sed 's|^\./||' |
+  awk '{
+    n = split($0, c, "/"); k = ""
+    for (i = 1; i <= n; i++) k = k ((i < n) ? "0" : "1") c[i] "/"
+    print k "\t" $0
+  }' | sort | cut -f2- | _tree -v width=$width

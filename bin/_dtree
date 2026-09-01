@@ -24,4 +24,4 @@ _ddiff --numstat "$@" -- |
     n = split($3, c, "/"); k = ""
     for (i = 1; i <= n; i++) k = k ((i < n) ? "0" : "1") c[i] "/"
     print k "\t" $0
-  }' | sort | cut -f2- | _tree -v width=$width
+  }' | sort | cut -f2- | _tree -v width=$width -v counts=1
