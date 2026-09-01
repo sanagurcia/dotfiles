@@ -5,6 +5,18 @@ set -euo pipefail
 # into the coder config dir, not ~/dotfiles.
 DOTFILES="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# The zshrc, gitconfig and bin/ scripts assume these are on PATH; without them
+# the shell errors on startup (fzf) or commands fail mid-run (delta, rg, ...).
+REQUIRED_TOOLS=(git fzf bat delta rg fd tmux gh)
+
+# Just flag what's absent — installing is left to me (brew on the Mac; the apt
+# block below builds what the Coder image lacks).
+missing=()
+for cmd in "${REQUIRED_TOOLS[@]}"; do
+	command -v "$cmd" >/dev/null || missing+=("$cmd")
+done
+((${#missing[@]})) && echo "Missing expected tools: ${missing[*]}" >&2
+
 ln -sf "$DOTFILES/gitconfig" "$HOME/.gitconfig"
 ln -sf "$DOTFILES/nanorc" "$HOME/.nanorc"
 ln -sf "$DOTFILES/tmux.conf" "$HOME/.tmux.conf"
