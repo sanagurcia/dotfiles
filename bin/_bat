@@ -1,0 +1,10 @@
+#!/bin/sh
+# bat, told which background it is up against — the same job _delta does, and
+# for the same reason: every call here is either in an fzf preview or piped into
+# less, so bat's own detection has no tty to ask.
+#
+# bat's auto:system used to cover this, but it reads the macOS setting rather
+# than the terminal, is macOS-only, and warns straight into the preview pane
+# anywhere else. GitHub when light; when dark, bat's bundled default.
+[ "$(_theme)" = light ] && export BAT_THEME=GitHub || unset BAT_THEME
+exec bat "$@"

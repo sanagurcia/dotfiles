@@ -16,7 +16,7 @@ committed here reaches the other side with one command.
 | `claude/CLAUDE.md`     | `~/.claude/CLAUDE.md`     | Claude Code user-level instructions |
 | `claude/skills/`       | `~/.claude/skills/`       | Claude Code user-level skills (`shared/` holds prose the skills cite, not a skill itself) |
 | `ripgreprc`            | `~/.ripgreprc`            | rg defaults, `src`/`tst` file types  |
-| `batconfig`            | `~/.config/bat/config`    | bat follows the macOS light/dark setting |
+| `batconfig`            | `~/.config/bat/config`    | bat defaults; the theme comes from `bin/theme` |
 | `bin/`                 | `~/.local/bin/`           | helper scripts (see below)           |
 
 Files are stored without the leading dot; `setup.sh` adds it when linking.
@@ -82,9 +82,10 @@ first.
 | `refs`  | which apps/packages a symbol appears in, plus total files      |
 | `ft`    | browse a directory a level at a time, `ctrl-g` for a global tree search, `ft DIR` to start at a subtree |
 | `scripts` | list these commands                                          |
+| `theme` | switch the terminal's light/dark theme and every script with it |
 
-`_defs`, `_pick` and `_bat-at` are internals these build on, not meant to be
-called directly. Symbol searches lean on the `src` and `tst` types defined in
+`_defs`, `_pick`, `_bat-at`, `_bat` and `_theme` are internals these build on,
+not meant to be called directly. Symbol searches lean on the `src` and `tst` types defined in
 `ripgreprc`, so they skip tests by default.
 
 `ft` browses a directory one level at a time — its immediate children on the
@@ -113,7 +114,7 @@ full tree that still matched only the top level is not something fzf can do.)
 
 `git review` is a `git-` prefixed script on `PATH`, which is all git needs to
 offer it as a subcommand. `_base`, `_dpick`, `_ddiff`, `_dstat`, `_dtree`,
-`_delta` and `_tree` are the internals it builds on; `_tree` is shared with `ft`, and passes
+`_delta`, `_bat` and `_tree` are the internals it builds on; `_tree` is shared with `ft`, and passes
 `-v counts=1` here to turn on the `+/-` column a plain file tree leaves off. The branch is compared against origin's
 default branch, not the local branch of the same name, which drifts behind.
 
@@ -169,15 +170,57 @@ palette indices, and the terminal decides what those look like. iTerm2's stock
 palette is pastel, which on a white background leaves directories and diffs too
 light to read.
 
-delta is the exception: it draws its diff backgrounds and syntax colours in
-24-bit, so it has to know which background it is against. `bin/_delta` wraps
-every call — gitconfig's pager and diffFilter, `git review`'s previews — and
-tells it, from the macOS setting on the Mac and dark off it. It also unsets
-`BAT_THEME` first: delta reads that for syntax highlighting, and the
-`auto:system` zshrc exports for bat is newer than the bat delta bundles, so
-delta fell back to a dark theme even when told `--light`.
+delta and bat are the exceptions: they draw their own 24-bit backgrounds and
+syntax colours, so they have to be told which background they are against.
 
-`iterm2-white.itermcolors` is a palette for that background: the six hues at
+### One switch
+
+`bin/theme` owns the answer and writes it to `~/.cache/theme`; `bin/_theme`
+prints it, and `bin/_delta` and `bin/_bat` wrap every call so that gitconfig's
+pager, `git review`'s previews and its pagers all read the same value. A file
+read per call, not an exported variable, so a toggle reaches shells and `git
+review` sessions that were already running.
+
+```
+theme            # print it
+theme toggle     # switch iTerm2 and the file together — what ⌘⇧T sends
+theme light      # or name one
+theme detect     # ask the terminal, and record the answer
+```
+
+`theme light|dark|toggle` also emits iTerm2's `SetProfile`, so the file is what
+*causes* the appearance rather than a guess at it — the two cannot disagree.
+`theme detect` is the other direction, asking the terminal itself with OSC 11
+and weighing the reply's luminance; zshrc runs it at every shell start, so a
+fresh session is right before anything is toggled. Both directions are wrapped
+for tmux passthrough (`allow-passthrough on` in tmux.conf), which is what lets
+them work from the Coder workspace over ssh.
+
+Nothing polls. A terminal query at each prompt costs a round trip before every
+command and races its reply against my own typing, which is how the previous
+attempts became flaky.
+
+Every earlier version asked macOS for `AppleInterfaceStyle` instead. That is
+the *system* appearance, not iTerm2's colour preset, so it was wrong whenever
+the two disagreed — and on the Coder box, where `git review` actually runs,
+there is no `defaults` binary at all, so it silently stayed dark forever.
+
+### iTerm2 setup
+
+Two profiles under Settings → Profiles, named `Light` and `Dark` (override with
+`THEME_PROFILE_LIGHT` / `THEME_PROFILE_DARK`) — `SetProfile` switches profiles,
+and a colour preset is not addressable by name. Give each its colours, then
+bind the toggle under Settings → Keys → Key Bindings → `+`:
+
+| | |
+|---|---|
+| Keyboard shortcut | ⌘⇧T |
+| Action            | Send Text |
+| Text              | `theme toggle\n` |
+
+Press it at a shell prompt and the profile and every script turn over together.
+
+`iterm2-white.itermcolors` is the palette for the light profile: the six hues at
 full saturation, each dark enough for 6:1 contrast, and the bright variants at
 4:5:1 rather than lighter still. Import it under iTerm2 → Settings → Profiles →
 Colors → Color Presets → Import, then select it. It is not symlinked; iTerm2

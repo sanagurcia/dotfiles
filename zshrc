@@ -47,15 +47,30 @@ export RIPGREP_CONFIG_PATH="$HOME/.ripgreprc"
 export AUTARC="postgresql://postgres@127.0.0.1:54322/postgres"
 export CLICOLOR=1
 
-# bat's auto:system follows the macOS light/dark setting and keeps working in an
-# fzf preview, where stdout is redirected and terminal detection cannot run. It
-# is macOS-only and warns into the preview pane anywhere else, so off the Mac
-# pick dark outright — as _dpick does for delta.
-if [[ $OSTYPE == darwin* ]]; then
-  export BAT_THEME=auto:system
-else
-  export BAT_THEME=dark
-fi
+# Light or dark, once, for everything: bin/theme records it and bin/_theme hands
+# it to delta, bat and the fzf previews. Ask the terminal itself at startup —
+# OSC 11 is the only question that survives ssh and tmux, and it does not care
+# how the theme was switched. Mid-session the iTerm2 keybinding that sends
+# `theme toggle` keeps it current; asking at every prompt would put a terminal
+# round trip in front of every command and race the reply against my typing.
+theme detect
+
+# The two knobs that live in this shell rather than in a script. Re-read each
+# prompt — a file read, no terminal I/O — so a toggle in another pane lands here
+# too. The autosuggest grey is tuned per background: lower is darker, and 245 is
+# invisible on black. fzf carries no 24-bit colours of its own, so its base
+# scheme is all there is to set.
+_theme_apply() {
+  local t=$(_theme)
+  export FZF_DEFAULT_OPTS="--color=$t"
+  if [[ $t == light ]]; then
+    ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=245'
+  else
+    ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=8'
+  fi
+}
+precmd_functions+=(_theme_apply)
+_theme_apply
 
 # Put the default alias's node on PATH without sourcing nvm's 4.8k lines (210ms);
 # nvm itself loads on first use, so `nvm use` still works. Mac only — the Coder
@@ -77,10 +92,9 @@ ssh-coder() {
 }
 
 # Ghost-text the rest of a command from history; right arrow accepts it. The
-# grey is tuned for a light terminal — lower is darker. The style applies either
-# way; the Coder image sources its own copy before this file, so only Homebrew's
-# needs loading here.
-ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=245'
+# grey comes from _theme_apply above, which resets it each prompt. The Coder
+# image sources its own copy before this file, so only Homebrew's needs loading
+# here.
 _as=/opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 [ -r $_as ] && source $_as
 unset _as

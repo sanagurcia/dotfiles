@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+# The light/dark switch, and the only thing worth invoking by hand.
+#
+#   theme            print the current value
+#   theme light      switch to light
+#   theme dark       switch to dark
+#   theme toggle     the other one — what iTerm2's keybinding sends
+#   theme detect     ask the terminal and record the answer (run at shell start)
+#
+# Switching writes the file bin/_theme reads *and* tells iTerm2 to change
+# profile, so the two cannot drift: the file is what causes the appearance,
+# rather than a guess about it. That is the whole point — every earlier attempt
+# asked macOS for its system appearance, which is not the thing being toggled
+# (a colour preset in iTerm2), and on the Coder box is not even askable.
+set -u
+
+file=${THEME_FILE:-${XDG_CACHE_HOME:-$HOME/.cache}/theme}
+light_profile=${THEME_PROFILE_LIGHT:-Light}
+dark_profile=${THEME_PROFILE_DARK:-Dark}
+
+# Anything we send has to survive tmux, which otherwise eats an escape it does
+# not recognise. Its passthrough wraps the sequence in a DCS and wants every
+# inner ESC doubled; it needs `allow-passthrough on`, which tmux.conf sets.
+emit() { # SEQUENCE
+  local s=$1
+  [ -n "${TMUX:-}" ] && s=$'\ePtmux;'${s//$'\e'/$'\e\e'}$'\e\\'
+  # stderr first: with no controlling tty the failed redirect would otherwise
+  # report itself, straight into whatever diff is being paged.
+  printf '%s' "$s" 2>/dev/null >/dev/tty
+}
+
+# iTerm2 switches the session's whole profile on this. A colour preset has no
+# such escape and is not addressable by name, hence two profiles.
+set_profile() { # light|dark
+  local p=$dark_profile
+  [ "$1" = light ] && p=$light_profile
+  emit $'\e]1337;SetProfile='"$p"$'\a'
+}
+
+# OSC 11 is "what is your background colour?" — the only question that reaches
+# the emulator itself, so the answer holds over ssh, inside tmux and whichever
+# way the theme was switched. The reply arrives as terminal *input*, so read the
+# tty raw, and bound the wait: a terminal that does not answer costs 200ms and
+# falls through to the next guess instead of hanging the shell.
+query() { # -> the reply, or nothing
+  local reply= saved
+  { exec 3<>/dev/tty; } 2>/dev/null || return 1
+  saved=$(stty -g <&3) || { exec 3>&-; return 1; }
+  stty raw -echo <&3
+  emit $'\e]11;?\a'
+  # BEL as the delimiter, since that is how the query is terminated and how a
+  # reply to it comes back: read returns the moment the answer lands, rather
+  # than sitting out the timeout at every shell start. A terminal that answers
+  # with ST instead falls back on the timeout — read keeps what it got by then.
+  # The window has to cover an ssh round trip, so it is generous.
+  IFS= read -r -t 0.25 -d $'\a' reply <&3
+  stty "$saved" <&3
+  exec 3>&-
+  printf '%s' "$reply"
+}
+
+# rgb:rrrr/gggg/bbbb from a real terminal, #rrggbb from some others. Two hex
+# digits per channel is enough to weigh, and Rec. 709 is the weighing.
+luma_of() { # REPLY -> light|dark, or nothing
+  local body r g b
+  case $1 in
+    *rgb:*) body=${1#*rgb:}
+            IFS=/ read -r r g b <<<"${body%%$'\a'*}" ;;
+    *'#'*)  body=${1#*#}; r=${body:0:2} g=${body:2:2} b=${body:4:2} ;;
+    *)      return 1 ;;
+  esac
+  r=${r:0:2} g=${g:0:2} b=${b:0:2}
+  [[ $r =~ ^[0-9a-fA-F]{2}$ && $g =~ ^[0-9a-fA-F]{2}$ && $b =~ ^[0-9a-fA-F]{2}$ ]] || return 1
+  (( (0x$r * 2126 + 0x$g * 7152 + 0x$b * 722) / 10000 > 128 )) &&
+    echo light || echo dark
+}
+
+detect() {
+  local reply t
+  # Passthrough first, so the answer comes from iTerm2 itself. Failing that ask
+  # tmux, which keeps its own idea of the outer background — second-hand, but
+  # right more often than a coin toss, and the only option when passthrough is
+  # off because tmux.conf has not been reloaded yet.
+  reply=$(query) && t=$(luma_of "$reply")
+  if [ -z "${t:-}" ] && [ -n "${TMUX:-}" ]; then
+    reply=$(TMUX= query) && t=$(luma_of "$reply")
+  fi
+  # Last resort on the Mac: the system appearance. Wrong whenever the iTerm2
+  # preset and macOS disagree, which is why it is last and not first.
+  if [ -z "${t:-}" ] && command -v defaults >/dev/null; then
+    [ "$(defaults read -g AppleInterfaceStyle 2>/dev/null)" = Dark ] && t=dark || t=light
+  fi
+  # Nothing answered. Keep whatever is on record rather than overwriting it:
+  # a laggy link, or a terminal busy in an fzf pane, must not silently reset a
+  # theme I toggled by hand. Only an empty record falls back to dark, since
+  # _theme does not probe and needs a value to find.
+  if [ -z "${t:-}" ]; then
+    case $(_theme_raw) in light|dark) return 0 ;; *) t=dark ;; esac
+  fi
+  write "$t"
+}
+
+# The recorded value, or nothing at all — as against _theme, which answers dark
+# when there is no record. detect needs to tell those two apart.
+_theme_raw() { local t; read -r t 2>/dev/null <"$file" && printf %s "$t"; }
+
+write() { # light|dark
+  mkdir -p "$(dirname "$file")"
+  printf '%s\n' "$1" >"$file"
+}
+
+case ${1:-print} in
+  print)        _theme; echo ;;
+  light|dark)   write "$1"; set_profile "$1" ;;
+  toggle)       t=dark; [ "$(_theme)" = dark ] && t=light
+                write "$t"; set_profile "$t" ;;
+  detect)       detect ;;
+  *) echo "usage: theme [light|dark|toggle|detect]" >&2; exit 2 ;;
+esac
