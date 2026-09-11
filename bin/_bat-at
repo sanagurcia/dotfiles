@@ -10,7 +10,7 @@
 # either flag: less takes the alternate screen and waits for q.
 f=$1 l=$2
 if [ -n "$l" ]; then
-  _bat --color=always -H "$l" --pager "less -R -j.33 +$l" "$f"
+  bat --color=always -H "$l" --pager "less -R -j.33 +$l" "$f"
 else
-  _bat --color=always --pager "less -R" "$f"
+  bat --color=always --pager "less -R" "$f"
 fi

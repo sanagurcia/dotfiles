@@ -1,7 +1,6 @@
-# The theme is not set here: it depends on the terminal's background, which only
-# bin/theme knows. bin/_bat exports BAT_THEME per call and every script in bin/
-# goes through it. bat's own auto:system read the macOS setting rather than the
-# terminal, and warned loudly off the Mac — straight into the fzf preview pane.
+# The theme is BAT_THEME in zshrc: auto:system is macOS-only and warns loudly
+# everywhere else, straight into the fzf preview pane. delta reads BAT_THEME too
+# and is older than auto:system, so bin/_delta keeps it away from delta.
 
 # Expand tabs to two columns. bat does this itself only on a terminal; piped into
 # a pager (_bat-at, the fzf previews) the raw tabs reach less, which stops every

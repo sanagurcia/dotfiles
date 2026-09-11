@@ -41,7 +41,7 @@ open=()
 case $1 in
   -o) open=(--bind 'ctrl-o:execute([ {2} = @pr ] || _bat-at {2})'); shift ;;
   -r) rev=$2; shift 2
-      open=(--bind "ctrl-o:execute([ {2} = @pr ] || git show $rev:{2} | _bat --color=always --file-name {2} --paging=always --pager \"less -R\")") ;;
+      open=(--bind "ctrl-o:execute([ {2} = @pr ] || git show $rev:{2} | bat --color=always --file-name {2} --paging=always --pager \"less -R\")") ;;
 esac
 
 # {2} is the real path; --with-nth 1 hides it and shows the tree column only.
@@ -60,7 +60,7 @@ diffprev="_ddiff $* -- {2} | _delta --24-bit-color=always --paging=never \
 # as bat and less both would. The width comes from whoever has one: fzf's pane
 # for the preview, the terminal for the pager.
 docprev="_prdoc | fold -s -w \$FZF_PREVIEW_COLUMNS \
-  | _bat --color=always --style=plain --language=md --paging=never"
+  | bat --color=always --style=plain --language=md --paging=never"
 preview="if [ {2} = @pr ]; then $docprev; else $diffprev; fi"
 
 # The stat counts only what is on show, so ctrl-h has to redraw it too — hence
@@ -72,7 +72,7 @@ _dtree "$@" |
       --header "$header" \
       --bind "resize:reload(_dtree $*)" \
       --preview "$preview" --preview-window 'right,75%,border-left' \
-      --bind "enter:execute(if [ {2} = @pr ]; then _prdoc | fold -s -w \"\$(tput cols)\" | _bat --color=always --style=plain --language=md --paging=always --pager 'less -R'; else _ddiff $* -- {2} | _delta --paging=always $numflag; fi)" \
+      --bind "enter:execute(if [ {2} = @pr ]; then _prdoc | fold -s -w \"\$(tput cols)\" | bat --color=always --style=plain --language=md --paging=always --pager 'less -R'; else _ddiff $* -- {2} | _delta --paging=always $numflag; fi)" \
       --bind "ctrl-h:execute-silent($show)+reload(_dtree $*)+refresh-preview+transform-header(_dstat $*)" \
       --bind "ctrl-l:execute-silent([ -s $nums ] && : > $nums || printf %s '$off' > $nums)+refresh-preview" \
       "${open[@]}"
