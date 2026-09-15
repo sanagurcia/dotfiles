@@ -4,5 +4,13 @@
     "gopls-lsp@claude-plugins-official": true
   },
   "effortLevel": "medium",
-  "theme": "auto"
+  "modelSettings": {
+    "claude-opus-5": {
+      "effortLevel": "medium"
+    }
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "$HOME/.claude/statusline.sh"
+  }
 }

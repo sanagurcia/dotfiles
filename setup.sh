@@ -7,7 +7,7 @@ DOTFILES="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # The zshrc, gitconfig and bin/ scripts assume these are on PATH; without them
 # the shell errors on startup (fzf) or commands fail mid-run (delta, rg, ...).
-REQUIRED_TOOLS=(git fzf bat delta rg fd tmux gh)
+REQUIRED_TOOLS=(git fzf bat delta rg fd tmux gh jq)
 
 # Just flag what's absent — installing is left to me (brew on the Mac; the apt
 # block below builds what the Coder image lacks).
@@ -72,6 +72,7 @@ fi
 mkdir -p "$HOME/.claude"
 ln -sf "$DOTFILES/claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
 ln -sf "$DOTFILES/claude/settings.json" "$HOME/.claude/settings.json"
+ln -sf "$DOTFILES/claude/statusline.sh" "$HOME/.claude/statusline.sh"
 ln -sfn "$DOTFILES/claude/skills" "$HOME/.claude/skills"
 
 # Own ~/.zshrc where there is none (this Mac); overlay one we did not write (Coder).
