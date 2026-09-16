@@ -76,6 +76,20 @@ ssh-coder() {
   ssh -t "$host" "tmux new-session -A -D -s ${(q)session}"
 }
 
+# Claude Code takes its width from the tty, and 145 columns is a punishing line
+# length to read prose at. Narrow the tty rather than the window: the emulator
+# never finds out, so every other pane and workflow keeps the full width. Put it
+# back on the way out, and stay out of the way when the output is a pipe.
+claude() {
+  [[ -t 1 ]] || { command claude "$@"; return; }
+  local cols=$(tput cols) ret
+  (( cols > 90 )) && stty cols 90
+  command claude "$@"
+  ret=$?
+  (( cols > 90 )) && stty cols $cols
+  return $ret
+}
+
 # Ghost-text the rest of a command from history; right arrow accepts it. The
 # grey is tuned for a light terminal — lower is darker. The style applies either
 # way; the Coder image sources its own copy before this file, so only Homebrew's
