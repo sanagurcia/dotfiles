@@ -1,17 +1,17 @@
 {
   "model": "opus[1m]",
+  "statusLine": {
+    "type": "command",
+    "command": "$HOME/.claude/statusline.sh"
+  },
   "enabledPlugins": {
     "gopls-lsp@claude-plugins-official": true
   },
   "effortLevel": "medium",
   "modelSettings": {
     "claude-opus-5": {
-      "effortLevel": "medium"
+      "effortLevel": "high"
     }
-  },
-  "statusLine": {
-    "type": "command",
-    "command": "$HOME/.claude/statusline.sh"
   },
   "theme": "auto"
 }
