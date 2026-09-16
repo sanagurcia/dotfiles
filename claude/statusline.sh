@@ -16,7 +16,14 @@ username=$(whoami)
 
 # Extract current directory and replace home with ~
 current_dir=$(echo "$input" | jq -r '.workspace.current_dir')
-current_dir_display="${current_dir/#$HOME/~}"
+current_dir_display="$current_dir"
+if [[ "$current_dir_display" == "$HOME" ]]; then
+    current_dir_display="~"
+elif [[ "$current_dir_display" == "$HOME/"* ]]; then
+    # Keep only the first directory below home (e.g. ~/work/apps/api -> ~/work)
+    rest="${current_dir_display#"$HOME"/}"
+    current_dir_display="~/${rest%%/*}"
+fi
 
 # Current git branch, if we're inside a repo (detached HEAD falls back to a short SHA)
 branch=$(git -C "$current_dir" symbolic-ref --quiet --short HEAD 2>/dev/null \
