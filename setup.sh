@@ -67,6 +67,23 @@ if command -v apt-get >/dev/null; then
 	fetch_static fd "$FD_VERSION" "https://github.com/sharkdp/fd/releases/download/v$FD_VERSION/fd-v$FD_VERSION-x86_64-unknown-linux-musl.tar.gz"
 fi
 
+# iTerm2 (macOS only). Dynamic profiles are read from this directory and never
+# written back, so the profile can live here; iTerm2 re-reads it on change.
+if [ "$(uname -s)" = Darwin ]; then
+	ITERM_DIR="$HOME/Library/Application Support/iTerm2/DynamicProfiles"
+	mkdir -p "$ITERM_DIR"
+	ln -sf "$DOTFILES/iterm2/profile.json" "$ITERM_DIR/dotfiles.json"
+
+	# Making it the default writes to iTerm2's own plist, which iTerm2 rewrites
+	# from memory when it quits — so only worth doing while it is closed.
+	if pgrep -xq iTerm2; then
+		echo "iTerm2 running: quit it and re-run to set the dotfiles profile as default." >&2
+	else
+		defaults write com.googlecode.iterm2 "Default Bookmark Guid" \
+			-string "$(jq -r '.Profiles[0].Guid' "$DOTFILES/iterm2/profile.json")"
+	fi
+fi
+
 # Claude Code reads user-level memory and settings from ~/.claude. Symlink them
 # so this machine and the Coder workspace share one source of truth.
 mkdir -p "$HOME/.claude"

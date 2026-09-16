@@ -18,6 +18,7 @@ committed here reaches the other side with one command.
 | `ripgreprc`            | `~/.ripgreprc`            | rg defaults, `src`/`tst` file types  |
 | `batconfig`            | `~/.config/bat/config`    | bat follows the macOS light/dark setting |
 | `bin/`                 | `~/.local/bin/`           | helper scripts (see below)           |
+| `iterm2/profile.json`  | `~/Library/Application Support/iTerm2/DynamicProfiles/dotfiles.json` | iTerm2 profile: window size, font, colours |
 
 Files are stored without the leading dot; `setup.sh` adds it when linking.
 
@@ -179,9 +180,9 @@ delta fell back to a dark theme even when told `--light`.
 
 `iterm2-white.itermcolors` is a palette for that background: the six hues at
 full saturation, each dark enough for 6:1 contrast, and the bright variants at
-4:5:1 rather than lighter still. Import it under iTerm2 → Settings → Profiles →
-Colors → Color Presets → Import, then select it. It is not symlinked; iTerm2
-copies a preset into its own preferences.
+4:5:1 rather than lighter still. `iterm2/profile.json` now carries this palette inline, so a fresh machine gets
+it from `setup.sh` with no import step; the `.itermcolors` file is kept for
+importing into a profile by hand (a dark one, later).
 
 Two slots break convention on purpose: 7 and 15 are normally near-white, which
 is invisible here, so they are dark greys instead. A program that draws white
