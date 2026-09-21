@@ -372,7 +372,7 @@
       },
       "Character Encoding": 4,
       "Close Sessions On End": true,
-      "Columns": 145,
+      "Columns": 90,
       "Command": "/opt/homebrew/bin/bash",
       "Cursor Color": {
         "Alpha Component": 1,
