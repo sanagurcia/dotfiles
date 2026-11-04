@@ -33,14 +33,22 @@ setopt hist_ignore_all_dups hist_reduce_blanks hist_verify inc_append_history
 
 # Prompt: host:cwd:branch / ❯
 # Hex, not named colours: those are palette indices, so the same prompt came out
-# a different colour in iTerm2 and on Coder. Fully saturated, dark enough to
-# read on white.
+# a different colour in iTerm2 and on Coder. Hex ignores the background too, so
+# two sets: saturated and dark enough to read on white, lighter tints of the same
+# hues on dark. The macOS appearance decides, as it does for bat and delta; off
+# the Mac, dark.
+if [[ $OSTYPE == darwin* && $(defaults read -g AppleInterfaceStyle 2>/dev/null) != Dark ]]; then
+  _pb='#0051f3' _pg='#007400' _pm='#af00af'
+else
+  _pb='#6fa8ff' _pg='#7ed37e' _pm='#d98fd9'
+fi
 autoload -Uz vcs_info
 zstyle ':vcs_info:git:*' formats '%b'
 precmd_functions+=(vcs_info)
 setopt prompt_subst
-PROMPT='%F{#0051f3}%m%f:%F{#007400}%~%f:%F{#af00af}${vcs_info_msg_0_}%f
-%F{#0051f3}  ❯%f '
+PROMPT="%F{$_pb}%m%f:%F{$_pg}%~%f:%F{$_pm}\${vcs_info_msg_0_}%f
+%F{$_pb}  ❯%f "
+unset _pb _pg _pm
 RPROMPT=''   # the Coder image starts starship, which leaves one on the right
 
 export RIPGREP_CONFIG_PATH="$HOME/.ripgreprc"
