@@ -257,7 +257,7 @@
       },
       "Character Encoding": 4,
       "Close Sessions On End": true,
-      "Columns": 90,
+      "Columns": 80,
       "Command": "/opt/homebrew/bin/bash",
       "Cursor Color": {
         "Alpha Component": 1,
@@ -534,12 +534,12 @@
       "Name": "Light (dotfiles)",
       "Non Ascii Font": "Monaco 12",
       "Non-ASCII Anti Aliased": true,
-      "Normal Font": "JetBrainsMono-Regular 14",
+      "Normal Font": "JetBrainsMono-Regular 16",
       "Option Key Sends": 0,
       "Prompt Before Closing 2": false,
       "Right Option Key Changeable": false,
       "Right Option Key Sends": 2,
-      "Rows": 45,
+      "Rows": 40,
       "Screen": -1,
       "Scrollback Lines": 1000,
       "Selected Text Color": {
