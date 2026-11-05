@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Sign into the local customer portal as a portal customer, without the email
+# round-trip: mints a single-use magic-link token through api-v2's internal
+# endpoint and opens the portal's magic-link route in the default browser.
+# Needs api-v2, the NestJS api and the portal running (autarc-dev). Run from
+# inside the autarc checkout.
+# Usage:
+#   autarc-portal                                  # tools@autarc.energy at autarc_gmbh
+#   autarc-portal --email jane@example.com --company acme_gmbh
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+
+EMAIL="tools@autarc.energy"
+COMPANY="autarc_gmbh"
+DB_URL="${DB_URL:-postgresql://postgres:postgres@localhost:54322/postgres}"
+API_V2_URL="https://localhost:8080"
+NEST_API_URL="http://localhost:3000"
+PORTAL_URL="http://localhost:5175"
+
+usage() {
+  cat <<EOF
+Usage: $(basename "$0") [OPTIONS]
+
+Options:
+  --email ADDRESS   Auth user to sign in as (default: $EMAIL).
+                    Needs an active customer_portal_access row at the company.
+  --company SLUG    Company slug the portal opens (default: $COMPANY)
+  -h, --help        Show this help message
+EOF
+  exit 0
+}
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --email) EMAIL="$2"; shift 2 ;;
+    --company) COMPANY="$2"; shift 2 ;;
+    -h|--help) usage ;;
+    *) echo "Unknown option: $1" >&2; exit 1 ;;
+  esac
+done
+
+require_up() {
+  local name="$1" url="$2" hint="$3"
+  if ! curl -sk -o /dev/null --max-time 3 "$url"; then
+    echo "$name is not reachable at $url. Start it with: $hint" >&2
+    exit 1
+  fi
+}
+
+require_up "api-v2" "$API_V2_URL/health" "make dev"
+require_up "NestJS api (resolves the company on the auth callback)" "$NEST_API_URL/api/v1/customer-portal/public/companies?slug=$COMPANY" "pnpm api dev"
+require_up "customer portal" "$PORTAL_URL/" "pnpm --filter @autarc/customer-portal dev"
+
+USER_ID="$(psql "$DB_URL" -Atc "select id from auth.users where email = lower('$EMAIL')")"
+if [[ -z "$USER_ID" ]]; then
+  echo "No auth user for $EMAIL in $DB_URL" >&2
+  exit 1
+fi
+
+API_KEY="$(grep '^INTERNAL_INTEGRATIONS_API_KEY=' "$REPO_ROOT/apps/api/api-v2/.env" | cut -d= -f2- | tr -d '"')"
+if [[ -z "$API_KEY" ]]; then
+  echo "INTERNAL_INTEGRATIONS_API_KEY missing in apps/api/api-v2/.env" >&2
+  exit 1
+fi
+
+TOKEN="$(curl -sk --fail -X POST "$API_V2_URL/v1/internal/auth/magic-link/create" \
+  -H "x-internal-api-key: $API_KEY" -H 'content-type: application/json' \
+  -d "{\"userId\":\"$USER_ID\"}" | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')"
+if [[ -z "$TOKEN" ]]; then
+  echo "api-v2 did not return a magic-link token" >&2
+  exit 1
+fi
+
+LINK="$PORTAL_URL/auth/magic-link?token=$TOKEN&company=$COMPANY"
+echo "Signing in as $EMAIL at $COMPANY (single use, valid 1 h):"
+echo "$LINK"
+open "$LINK"
