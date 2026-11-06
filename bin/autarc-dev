@@ -1,17 +1,23 @@
 #!/usr/bin/env bash
 # Tier 4: the dev servers as tmux panes, no agent pane.
 
-# Defaults to web + api + api-v2 + worker; any args replace that set
-# (`pnpm energy launch --help` lists the app keys).
+# Always runs web + api + api-v2 + worker; any args are launched in addition,
+# e.g. `autarc-dev customer-portal` (`pnpm energy launch --help` lists the keys).
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
+ports=(WEB API API_V2 MCP)
+for app in "$@"; do
+  case $app in
+    customer-portal) ports+=(CUSTOMER_PORTAL) ;;
+    field-worker) ports+=(FIELD_WORKER) ;;
+    check) ports+=(CHECK) ;;
+    scotty) ports+=(SCOTTY) ;;
+  esac
+done
+
 # Orphans from a previous run keep holding these, so never inherit them. A
 # failure here means a live supervisor is respawning them: autarc-stop.
-_free-ports $(_dev-ports WEB API API_V2 MCP)
+_free-ports $(_dev-ports "${ports[@]}")
 
-if [ $# -gt 0 ]; then
-  pnpm energy launch --no-agent "$@"
-else
-  pnpm energy launch --no-agent web api api-v2 worker
-fi
+pnpm energy launch --no-agent web api api-v2 worker "$@"
