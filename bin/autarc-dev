@@ -16,8 +16,11 @@ for app in "$@"; do
   esac
 done
 
-# Orphans from a previous run keep holding these, so never inherit them. A
-# failure here means a live supervisor is respawning them: autarc-stop.
+# Other branches' sessions share this checkout's ports, and their air (rerun =
+# true) respawns api-v2 the moment _free-ports kills it.
+autarc-stop >/dev/null || true
+
+# Orphans from a previous run keep holding these, so never inherit them.
 _free-ports $(_dev-ports "${ports[@]}")
 
 pnpm energy launch --no-agent web api api-v2 worker "$@"
