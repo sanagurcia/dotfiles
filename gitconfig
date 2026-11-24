@@ -22,6 +22,9 @@
 [pull]
 	ff = only
 
+[fetch]
+	prune = true
+
 [core]
 	# _delta, not delta: the wrapper says which background it is against, and
 	# keeps BAT_THEME off it. See bin/_delta.
@@ -36,3 +39,9 @@
 	line-numbers = true
 	# Tabs, otherwise 8 columns wide.
 	tabs = 2
+[credential "https://github.com"]
+	helper = 
+	helper = !/opt/homebrew/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+	helper = 
+	helper = !/opt/homebrew/bin/gh auth git-credential
